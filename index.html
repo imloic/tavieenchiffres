@@ -1143,8 +1143,8 @@ function generateShareButtons(stats) {
     <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}" target="_blank" rel="noopener">${ICONS.linkedin} LinkedIn</a>
     <a href="https://wa.me/?text=${encoded}" target="_blank" rel="noopener">${ICONS.whatsapp} WhatsApp</a>
     <a href="#" data-action="copy" onclick="copyLink();return false;">${ICONS.copy} ${t('Copier le lien', 'Copy link')}</a>
-    <a href="#" onclick="generateShareCard('post');return false;" class="share-download">${ICONS.instagram} ${t('Post Instagram', 'Instagram Post')}</a>
-    <a href="#" onclick="generateShareCard('story');return false;" class="share-download">${ICONS.download} ${t('Story Instagram', 'Instagram Story')}</a>
+    <a href="#" onclick="generateShareCard('post');return false;" class="share-download">${ICONS.instagram} ${t('Image carrée', 'Square image')}</a>
+    <a href="#" onclick="generateShareCard('story');return false;" class="share-download">${ICONS.download} ${t('Image story', 'Story image')}</a>
   `;
 }
 
@@ -1166,120 +1166,268 @@ async function generateShareCard(format) {
   const rawName = qi('nameInput').value.trim();
   const name = rawName || '';
 
+  // Ensure font is loaded
+  try { await document.fonts.load('900 72px Inter'); } catch(e) {}
+
   const isStory = format === 'story';
   const W = 1080;
   const H = isStory ? 1920 : 1080;
+  const pad = 80;
 
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
+  const f = (w, s) => `${w} ${s}px Inter, -apple-system, sans-serif`;
 
-  // Background
+  // ── Background ──
   ctx.fillStyle = '#0a0a0a';
   ctx.fillRect(0, 0, W, H);
 
-  // Subtle gradient overlay
-  const grad = ctx.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0, 'rgba(255, 107, 53, 0.06)');
-  grad.addColorStop(1, 'rgba(59, 130, 246, 0.04)');
-  ctx.fillStyle = grad;
+  // Radial glow top-right
+  const glow = ctx.createRadialGradient(W * 0.8, 0, 0, W * 0.8, 0, W * 0.6);
+  glow.addColorStop(0, 'rgba(255, 107, 53, 0.10)');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
 
-  // Accent line at top
-  ctx.fillStyle = '#ff6b35';
-  ctx.fillRect(0, 0, W, 4);
+  // Radial glow bottom-left
+  const glow2 = ctx.createRadialGradient(W * 0.2, H, 0, W * 0.2, H, W * 0.5);
+  glow2.addColorStop(0, 'rgba(59, 130, 246, 0.06)');
+  glow2.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow2;
+  ctx.fillRect(0, 0, W, H);
 
-  // Font helper
-  const font = (w, s) => `${w} ${s}px Inter, -apple-system, sans-serif`;
+  // Accent bar at top
+  const barGrad = ctx.createLinearGradient(0, 0, W, 0);
+  barGrad.addColorStop(0, '#ff6b35');
+  barGrad.addColorStop(1, '#ec4899');
+  ctx.fillStyle = barGrad;
+  ctx.fillRect(0, 0, W, 6);
 
-  // Title
-  const titleY = isStory ? 160 : 100;
-  ctx.font = font('800', isStory ? 52 : 46);
-  ctx.fillStyle = '#f5f5f5';
-  const title = t('Ta Vie en Chiffres', 'Your Life in Numbers');
+  // ── Header ──
+  const headerY = isStory ? 120 : 80;
   ctx.textAlign = 'center';
-  ctx.fillText(title, W / 2, titleY);
 
-  // Subtitle with name
-  ctx.font = font('300', isStory ? 32 : 28);
+  // Logo text
+  ctx.font = f('900', isStory ? 58 : 52);
+  ctx.fillStyle = '#f5f5f5';
+  ctx.fillText(t('Ta Vie en Chiffres', 'Your Life in Numbers'), W / 2, headerY);
+
+  // Accent underline
+  const titleW = ctx.measureText(t('Ta Vie en Chiffres', 'Your Life in Numbers')).width;
+  ctx.fillStyle = '#ff6b35';
+  ctx.fillRect((W - titleW) / 2, headerY + 10, titleW, 3);
+
+  // Subtitle
+  ctx.font = f('300', isStory ? 36 : 30);
   ctx.fillStyle = '#94a3b8';
-  const subtitle = name
+  const sub = name
     ? t(`Les chiffres de ${name}`, `${name}'s numbers`)
     : t('Tes chiffres de vie', 'Your life numbers');
-  ctx.fillText(subtitle, W / 2, titleY + (isStory ? 56 : 48));
+  ctx.fillText(sub, W / 2, headerY + (isStory ? 58 : 52));
 
-  // Key stats
+  // ── Stats grid ──
   const statItems = [
-    { emoji: '\u2764\uFE0F', value: formatNum(stats.heartbeats), label: t('battements de c\u0153ur', 'heartbeats'), color: '#ec4899' },
-    { emoji: '\uD83D\uDCA4', value: formatDec(stats.sleepYears) + ' ' + t('ans', 'yrs'), label: t('pass\u00E9s \u00E0 dormir', 'spent sleeping'), color: '#3b82f6' },
-    { emoji: '\uD83C\uDF1D', value: formatDec(stats.sunBillionKm, 1) + ' ' + t('Mds km', 'B km'), label: t('autour du Soleil', 'around the Sun'), color: '#22c55e' },
-    { emoji: '\uD83D\uDC41\uFE0F', value: formatNum(stats.blinkDarkDays) + ' ' + t('jours', 'days'), label: t('dans le noir (clignements)', 'in darkness (blinks)'), color: '#3b82f6' },
-    { emoji: '\u2600\uFE0F', value: String(stats.summersRemaining), label: t('\u00E9t\u00E9s restants', 'summers left'), color: '#ff6b35' },
+    { icon: '\u2764\uFE0F', value: formatNum(stats.heartbeats), label: t('battements de c\u0153ur', 'heartbeats'), color: '#ec4899' },
+    { icon: '\uD83D\uDE34', value: formatDec(stats.sleepYears) + t(' ans', ' yrs'), label: t('pass\u00E9s \u00E0 dormir', 'spent sleeping'), color: '#3b82f6' },
+    { icon: '\u2615', value: stats.coffeeTotal > 0 ? formatNum(stats.coffeeTotal) : formatNum(stats.mealsEaten), label: stats.coffeeTotal > 0 ? t('caf\u00E9s bus', 'coffees drunk') : t('repas aval\u00E9s', 'meals eaten'), color: '#f59e0b' },
+    { icon: '\uD83C\uDF0D', value: formatDec(stats.sunBillionKm, 1) + t(' Mds km', ' B km'), label: t('autour du Soleil', 'around the Sun'), color: '#22c55e' },
+    { icon: '\uD83D\uDCF1', value: formatDec(stats.screenYearsLife, 1) + t(' ans', ' yrs'), label: t('sur un \u00E9cran', 'on a screen'), color: '#8b5cf6' },
+    { icon: '\u2600\uFE0F', value: String(stats.summersRemaining), label: t('\u00E9t\u00E9s restants', 'summers left'), color: '#ff6b35' },
   ];
 
-  const startY = isStory ? 360 : 240;
-  const gap = isStory ? 230 : 130;
+  if (isStory) {
+    // ── STORY: stacked list layout ──
+    const startY = 280;
+    const gap = 210;
+
+    statItems.forEach((item, i) => {
+      const y = startY + i * gap;
+      const cardY = y - 30;
+      const cardH = 170;
+
+      // Card background
+      ctx.fillStyle = 'rgba(20, 20, 20, 0.8)';
+      ctx.beginPath();
+      ctx.roundRect(pad, cardY, W - pad * 2, cardH, 20);
+      ctx.fill();
+
+      // Left color accent bar
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.roundRect(pad, cardY, 5, cardH, [20, 0, 0, 20]);
+      ctx.fill();
+
+      // Icon
+      ctx.font = f('400', 48);
+      ctx.textAlign = 'left';
+      ctx.fillText(item.icon, pad + 30, y + 22);
+
+      // Value
+      ctx.font = f('900', 52);
+      ctx.fillStyle = item.color;
+      ctx.textAlign = 'left';
+      ctx.fillText(item.value, pad + 100, y + 18);
+
+      // Label
+      ctx.font = f('400', 30);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText(item.label, pad + 100, y + 60);
+    });
+
+    // ── Progress section ──
+    const progY = startY + 6 * gap - 20;
+    const pct = Math.min(100, (stats.ageYears / stats.lifeExp) * 100);
+
+    ctx.textAlign = 'center';
+    ctx.font = f('900', 72);
+    ctx.fillStyle = '#f5f5f5';
+    ctx.fillText(formatDec(pct, 1) + '%', W / 2, progY + 20);
+
+    ctx.font = f('400', 32);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(t('de ta vie est derri\u00E8re toi', 'of your life is behind you'), W / 2, progY + 64);
+
+    // Progress bar
+    const barW = W - pad * 2;
+    const barH = 24;
+    const barX = pad;
+    const barBY = progY + 90;
+
+    ctx.fillStyle = '#1e1e1e';
+    ctx.beginPath();
+    ctx.roundRect(barX, barBY, barW, barH, barH / 2);
+    ctx.fill();
+
+    const fillGrad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    fillGrad.addColorStop(0, '#ff6b35');
+    fillGrad.addColorStop(1, '#ec4899');
+    ctx.fillStyle = fillGrad;
+    ctx.beginPath();
+    ctx.roundRect(barX, barBY, barW * (pct / 100), barH, barH / 2);
+    ctx.fill();
+
+  } else {
+    // ── POST: 2x3 grid layout ──
+    const cols = 3;
+    const rows = 2;
+    const gridTop = 200;
+    const gridBottom = H - 220;
+    const cellW = (W - pad * 2) / cols;
+    const cellH = (gridBottom - gridTop) / rows;
+
+    statItems.forEach((item, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const cx = pad + col * cellW + cellW / 2;
+      const cy = gridTop + row * cellH + cellH / 2;
+
+      // Card background
+      ctx.fillStyle = 'rgba(20, 20, 20, 0.7)';
+      ctx.beginPath();
+      ctx.roundRect(cx - cellW / 2 + 12, cy - cellH / 2 + 12, cellW - 24, cellH - 24, 16);
+      ctx.fill();
+
+      // Colored top edge
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.roundRect(cx - cellW / 2 + 12, cy - cellH / 2 + 12, cellW - 24, 4, [16, 16, 0, 0]);
+      ctx.fill();
+
+      // Icon
+      ctx.font = f('400', 44);
+      ctx.textAlign = 'center';
+      ctx.fillText(item.icon, cx, cy - 50);
+
+      // Value
+      ctx.font = f('900', 42);
+      ctx.fillStyle = item.color;
+      ctx.fillText(item.value, cx, cy + 10);
+
+      // Label
+      ctx.font = f('500', 22);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText(item.label, cx, cy + 48);
+    });
+
+    // ── Progress bar below grid ──
+    const pct = Math.min(100, (stats.ageYears / stats.lifeExp) * 100);
+    const progY = gridBottom + 30;
+
+    ctx.textAlign = 'center';
+    ctx.font = f('800', 48);
+    ctx.fillStyle = '#f5f5f5';
+    ctx.fillText(formatDec(pct, 1) + '%', W / 2, progY + 20);
+
+    ctx.font = f('400', 24);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(t('de ta vie est derri\u00E8re toi', 'of your life is behind you'), W / 2, progY + 54);
+
+    const barW = W * 0.5;
+    const barH2 = 16;
+    const barX = (W - barW) / 2;
+    const barBY = progY + 72;
+
+    ctx.fillStyle = '#1e1e1e';
+    ctx.beginPath();
+    ctx.roundRect(barX, barBY, barW, barH2, barH2 / 2);
+    ctx.fill();
+
+    const fillGrad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    fillGrad.addColorStop(0, '#ff6b35');
+    fillGrad.addColorStop(1, '#ec4899');
+    ctx.fillStyle = fillGrad;
+    ctx.beginPath();
+    ctx.roundRect(barX, barBY, barW * (pct / 100), barH2, barH2 / 2);
+    ctx.fill();
+  }
+
+  // ── Footer ──
+  const footY = H - (isStory ? 100 : 48);
+
+  // Separator line
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad, footY - 40);
+  ctx.lineTo(W - pad, footY - 40);
+  ctx.stroke();
 
   ctx.textAlign = 'center';
-  statItems.forEach((item, i) => {
-    const y = startY + i * gap;
-
-    // Emoji
-    ctx.font = font('400', isStory ? 42 : 36);
-    ctx.fillStyle = '#f5f5f5';
-    ctx.fillText(item.emoji, W / 2, y);
-
-    // Value
-    ctx.font = font('900', isStory ? 56 : 48);
-    ctx.fillStyle = item.color;
-    ctx.fillText(item.value, W / 2, y + (isStory ? 58 : 48));
-
-    // Label
-    ctx.font = font('400', isStory ? 26 : 22);
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText(item.label, W / 2, y + (isStory ? 92 : 78));
-  });
-
-  // Progress bar
-  const pct = Math.min(100, (stats.ageYears / stats.lifeExp) * 100);
-  const barY = isStory ? startY + 5 * gap + 20 : startY + 5 * gap + 10;
-  const barW = W * 0.6;
-  const barH = isStory ? 20 : 16;
-  const barX = (W - barW) / 2;
-
-  // Bar background
-  ctx.fillStyle = '#1e1e1e';
-  ctx.beginPath();
-  ctx.roundRect(barX, barY, barW, barH, barH / 2);
-  ctx.fill();
-
-  // Bar fill
-  ctx.fillStyle = '#ff6b35';
-  ctx.beginPath();
-  ctx.roundRect(barX, barY, barW * (pct / 100), barH, barH / 2);
-  ctx.fill();
-
-  // Progress text
-  ctx.font = font('600', isStory ? 24 : 20);
-  ctx.fillStyle = '#f5f5f5';
-  ctx.fillText(formatDec(pct, 1) + '% ' + t('de ta vie', 'of your life'), W / 2, barY + barH + (isStory ? 36 : 30));
-
-  // Footer / URL
-  const footY = isStory ? H - 100 : H - 50;
-  ctx.font = font('600', isStory ? 30 : 26);
+  ctx.font = f('700', isStory ? 32 : 26);
   ctx.fillStyle = '#ff6b35';
   ctx.fillText('tavieenchiffres.guillout.com', W / 2, footY);
 
-  ctx.font = font('300', isStory ? 22 : 18);
+  ctx.font = f('300', isStory ? 24 : 20);
   ctx.fillStyle = '#64748b';
-  ctx.fillText(t('Découvre tes chiffres', 'Discover your numbers'), W / 2, footY + (isStory ? 40 : 32));
+  ctx.fillText(t('D\u00E9couvre tes chiffres de vie', 'Discover your life numbers'), W / 2, footY + (isStory ? 38 : 30));
 
-  // Download
-  const link = document.createElement('a');
-  link.download = `tavieenchiffres-${format}.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+  // ── Share or Download ──
+  const fileName = `tavieenchiffres-${format}.png`;
+
+  // Try native share (mobile)
+  canvas.toBlob(async (blob) => {
+    const file = new File([blob], fileName, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: t('Ta Vie en Chiffres', 'Your Life in Numbers'),
+          text: t('Découvre tes chiffres de vie', 'Discover your life numbers') + ' — tavieenchiffres.guillout.com',
+        });
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return; // user cancelled
+      }
+    }
+    // Fallback: download
+    const link = document.createElement('a');
+    link.download = fileName;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+  }, 'image/png');
 }
 
 // ============================================================
