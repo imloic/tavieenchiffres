@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ta Vie en Chiffres — Combien de temps te reste-t-il ?</title>
+<meta name="description" content="Découvre ta vie en chiffres : temps passé à dormir, manger, travailler, scroller... et combien d'étés il te reste. Données INSEE.">
+<meta property="og:title" content="Ta Vie en Chiffres">
+<meta property="og:description" content="Découvre combien de temps tu as passé à dormir, manger, travailler... et combien d'étés il te reste.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="">
+<meta property="og:image" content="og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0a;
+  --bg-card: #141414;
+  --text: #f5f5f5;
+  --text-dim: #94a3b8;
+  --accent: #ff6b35;
+  --accent-glow: rgba(255, 107, 53, 0.15);
+  --green: #22c55e;
+  --blue: #3b82f6;
+  --pink: #ec4899;
+  --weeks-lived: #ff6b35;
+  --weeks-future: #1e1e1e;
+  --weeks-border: #2a2a2a;
+}
+
+html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: #333 var(--bg); }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === LANG TOGGLE === */
+.lang-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 2px;
+  z-index: 200;
+  background: var(--bg-card);
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 2px;
+}
+.lang-toggle button {
+  padding: 6px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.lang-toggle button.active {
+  background: var(--accent);
+  color: white;
+}
+
+/* === INPUT SCREEN === */
+#inputScreen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.hero-title {
+  font-size: clamp(32px, 6vw, 64px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.hero-title span { color: var(--accent); }
+.hero-subtitle {
+  color: var(--text-dim);
+  font-size: clamp(16px, 2.5vw, 22px);
+  font-weight: 300;
+  text-align: center;
+  margin-bottom: 48px;
+  max-width: 500px;
+}
+
+.input-card {
+  background: var(--bg-card);
+  border: 1px solid #222;
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.input-group { margin-bottom: 24px; }
+.input-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.input-group input[type="date"],
+.input-group input[type="text"],
+.input-group select {
+  width: 100%;
+  padding: 14px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-group input:focus,
+.input-group select:focus { border-color: var(--accent); }
+
+.sex-toggle { display: flex; gap: 8px; }
+.sex-toggle button {
+  flex: 1;
+  padding: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  background: #1a1a1a;
+  border: 2px solid #333;
+  border-radius: 10px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sex-toggle button.active { border-color: var(--accent); color: var(--text); background: var(--accent-glow); }
+.sex-toggle button:hover:not(.active) { border-color: #555; }
+
+.quick-questions {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #222;
+}
+.quick-questions h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+.question { margin-bottom: 16px; }
+.question .q-label { font-size: 15px; color: var(--text); margin-bottom: 8px; }
+.q-options { display: flex; gap: 6px; flex-wrap: wrap; }
+.q-options button {
+  padding: 8px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.q-options button.active { border-color: var(--accent); color: var(--text); background: var(--accent-glow); }
+.q-options button:hover:not(.active) { border-color: #555; }
+
+.btn-discover {
+  width: 100%;
+  padding: 18px;
+  margin-top: 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: -0.01em;
+}
+.btn-discover:hover { background: #e55a28; transform: translateY(-1px); box-shadow: 0 8px 30px rgba(255, 107, 53, 0.3); }
+.btn-discover:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* === RESULTS === */
+#results { display: none; }
+
+.stat-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.stat-section.visible { opacity: 1; transform: translateY(0); }
+
+.stat-number {
+  font-size: clamp(48px, 12vw, 120px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.stat-number.green { color: var(--green); }
+.stat-number.blue { color: var(--blue); }
+.stat-number.pink { color: var(--pink); }
+.stat-number.white { color: var(--text); }
+
+.stat-label {
+  font-size: clamp(20px, 3.5vw, 32px);
+  font-weight: 300;
+  color: var(--text);
+  text-align: center;
+  max-width: 600px;
+  line-height: 1.4;
+}
+.stat-label strong { font-weight: 700; }
+
+.stat-detail {
+  font-size: 15px;
+  color: var(--text-dim);
+  margin-top: 16px;
+  text-align: center;
+  max-width: 500px;
+}
+.stat-source { font-size: 12px; color: #444; margin-top: 12px; }
+.stat-emoji { font-size: clamp(40px, 8vw, 80px); margin-bottom: 16px; }
+
+/* === PROGRESS BAR === */
+.progress-container { width: 100%; max-width: 400px; margin-top: 24px; }
+.progress-bar { height: 12px; background: #1e1e1e; border-radius: 6px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 6px; transition: width 1.5s ease; width: 0; }
+.progress-labels { display: flex; justify-content: space-between; margin-top: 6px; font-size: 13px; color: var(--text-dim); }
+
+/* === PIE CHART === */
+.pie-container {
+  position: relative;
+  width: clamp(240px, 50vw, 360px);
+  height: clamp(240px, 50vw, 360px);
+  border-radius: 50%;
+  margin: 24px auto;
+}
+.pie-legend { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: center; margin-top: 24px; max-width: 500px; }
+.pie-legend-item { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.pie-legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+/* === LIFE IN WEEKS === */
+.weeks-section {
+  min-height: 100vh;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.weeks-section.visible { opacity: 1; transform: translateY(0); }
+.weeks-title { font-size: clamp(24px, 4vw, 40px); font-weight: 800; text-align: center; margin-bottom: 8px; }
+.weeks-subtitle { font-size: 16px; color: var(--text-dim); text-align: center; margin-bottom: 24px; }
+.weeks-grid { display: grid; grid-template-columns: repeat(52, 1fr); gap: 1px; max-width: 700px; width: 100%; }
+.week-cell {
+  aspect-ratio: 1;
+  border-radius: 1px;
+  background: var(--weeks-future);
+  border: 0.5px solid var(--weeks-border);
+  transition: background 0.3s;
+}
+.week-cell.lived { background: var(--weeks-lived); border-color: var(--weeks-lived); }
+.week-cell.current { background: var(--text); border-color: var(--text); box-shadow: 0 0 6px rgba(255,255,255,0.5); }
+.weeks-legend { display: flex; gap: 24px; margin-top: 16px; font-size: 14px; color: var(--text-dim); }
+.weeks-legend-item { display: flex; align-items: center; gap: 6px; }
+.weeks-legend-dot { width: 12px; height: 12px; border-radius: 2px; }
+
+/* === FINAL === */
+.final-section {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+.final-section h2 { font-size: clamp(28px, 5vw, 48px); font-weight: 800; margin-bottom: 16px; }
+.final-section p { color: var(--text-dim); font-size: 18px; max-width: 500px; margin-bottom: 32px; }
+.btn-restart {
+  padding: 14px 32px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  background: transparent;
+  border: 2px solid #333;
+  border-radius: 12px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-restart:hover { border-color: var(--accent); color: var(--accent); }
+
+.share-buttons { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
+.share-buttons a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--bg-card);
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: var(--text);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.share-buttons a:hover { border-color: var(--accent); transform: translateY(-1px); }
+.share-buttons a svg { flex-shrink: 0; }
+
+.scroll-hint {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #444;
+  font-size: 13px;
+  animation: bounce 2s infinite;
+  pointer-events: none;
+  z-index: 100;
+  transition: opacity 0.3s;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+footer {
+  text-align: center;
+  padding: 40px 24px;
+  color: #333;
+  font-size: 13px;
+  border-top: 1px solid #1a1a1a;
+}
+footer a { color: #555; }
+
+@media (max-width: 600px) {
+  .input-card { padding: 24px 20px; }
+  .stat-section { min-height: 80vh; padding: 32px 20px; }
+  .weeks-grid { gap: 0.5px; }
+  .q-options button { padding: 6px 12px; font-size: 13px; }
+}
+
+.fade-out { opacity: 0; transition: opacity 0.5s ease; }
+</style>
+</head>
+<body>
+
+<!-- Lang toggle -->
+<div class="lang-toggle">
+  <button data-lang="fr" onclick="setLang('fr')">FR</button>
+  <button data-lang="en" onclick="setLang('en')">EN</button>
+</div>
+
+<!-- ========== INPUT SCREEN ========== -->
+<div id="inputScreen">
+  <h1 class="hero-title">Ta Vie en <span>Chiffres</span></h1>
+  <p class="hero-subtitle">Découvre combien de temps tu as passé à dormir, manger, travailler... et combien d'étés il te reste.</p>
+
+  <div class="input-card">
+    <div class="input-group">
+      <label for="nameInput">Ton prénom</label>
+      <input type="text" id="nameInput" placeholder="Optionnel" maxlength="30" autocomplete="given-name">
+    </div>
+
+    <div class="input-group">
+      <label for="birthDate">Date de naissance</label>
+      <input type="date" id="birthDate" min="1930-01-01" max="2012-12-31">
+    </div>
+
+    <div class="input-group">
+      <label id="labelSex">Sexe</label>
+      <div class="sex-toggle">
+        <button type="button" data-sex="M" onclick="selectSex('M', this)">Homme</button>
+        <button type="button" data-sex="F" onclick="selectSex('F', this)">Femme</button>
+      </div>
+    </div>
+
+    <div class="quick-questions">
+      <h3 id="qqTitle">Quelques questions (30 sec)</h3>
+
+      <div class="question">
+        <div class="q-label" id="qlCoffee">Tu bois du café ?</div>
+        <div class="q-options" data-q="coffee">
+          <button onclick="selectOption('coffee', 0, this)">Non</button>
+          <button onclick="selectOption('coffee', 1.5, this)">1-2 / jour</button>
+          <button onclick="selectOption('coffee', 3, this)" class="active">3+ / jour</button>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="q-label" id="qlCommute">Ton trajet domicile-travail ?</div>
+        <div class="q-options" data-q="commute">
+          <button onclick="selectOption('commute', 0, this)">Pas de trajet</button>
+          <button onclick="selectOption('commute', 20, this)">&lt; 30 min</button>
+          <button onclick="selectOption('commute', 45, this)" class="active">30-60 min</button>
+          <button onclick="selectOption('commute', 75, this)">&gt; 1h</button>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="q-label" id="qlOffice">Tu travailles en bureau ?</div>
+        <div class="q-options" data-q="office">
+          <button onclick="selectOption('office', 0, this)">Non</button>
+          <button onclick="selectOption('office', 1, this)" class="active">Oui</button>
+        </div>
+      </div>
+
+      <div class="question">
+        <div class="q-label" id="qlCook">Tu cuisines ?</div>
+        <div class="q-options" data-q="cook">
+          <button onclick="selectOption('cook', 15, this)">Rarement</button>
+          <button onclick="selectOption('cook', 40, this)" class="active">Souvent</button>
+          <button onclick="selectOption('cook', 70, this)">Tous les jours</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-discover" id="btnDiscover" onclick="discover()">Découvrir ma vie en chiffres</button>
+  </div>
+
+  <p id="privacyNote" style="color:#333;font-size:12px;margin-top:24px">Aucune donnée stockée. Tout est calculé dans ton navigateur.</p>
+</div>
+
+<!-- ========== RESULTS ========== -->
+<div id="results">
+  <div id="statsContainer"></div>
+
+  <div class="weeks-section" id="weeksSection">
+    <h2 class="weeks-title">Ta vie en semaines</h2>
+    <p class="weeks-subtitle">Chaque case = 1 semaine. Chaque ligne = 1 an.</p>
+    <div class="weeks-grid" id="weeksGrid"></div>
+    <div class="weeks-legend">
+      <div class="weeks-legend-item"><div class="weeks-legend-dot" style="background:var(--weeks-lived)"></div> <span>Vécu</span></div>
+      <div class="weeks-legend-item"><div class="weeks-legend-dot" style="background:var(--text)"></div> <span>Cette semaine</span></div>
+      <div class="weeks-legend-item"><div class="weeks-legend-dot" style="background:var(--weeks-future)"></div> <span>À venir</span></div>
+    </div>
+  </div>
+
+  <div class="stat-section" id="pieSection">
+    <div class="stat-emoji">&#x1F4CA;</div>
+    <h2 class="pie-title" style="font-size:clamp(24px,4vw,40px);font-weight:800;margin-bottom:8px">Répartition de ta vie</h2>
+    <p class="pie-subtitle" style="color:var(--text-dim);font-size:16px;margin-bottom:16px">En années estimées sur une vie entière</p>
+    <div class="pie-container" id="pieChart"></div>
+    <div class="pie-legend" id="pieLegend"></div>
+  </div>
+
+  <div class="final-section">
+    <h2 class="final-title">Profite de chaque <span style="color:var(--accent)">instant</span>.</h2>
+    <p class="final-text">Ce ne sont que des moyennes. Ta vie, c'est toi qui la dessines.</p>
+    <div class="share-buttons" id="shareButtons"></div>
+    <button class="btn-restart" onclick="restart()" style="margin-top:24px">Recommencer</button>
+  </div>
+
+  <footer>
+    <p class="footer-sources">Sources : INSEE, DARES, Santé publique France, OCDE, Médiamétrie, Arcep, IFOP</p>
+    <p class="footer-made" style="margin-top:8px">Fait avec soin en France. Aucune donnée collectée.</p>
+  </footer>
+</div>
+
+<div class="scroll-hint" id="scrollHint">&#x2193; Scroll pour découvrir</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let lang = 'fr';
+try { lang = localStorage.getItem('tvec-lang') || 'fr'; } catch(e) {}
+const userInput = { birthDate: null, sex: null, coffee: 3, commute: 45, office: 1, cook: 40 };
+
+// ============================================================
+// DATA (INSEE, DARES, Santé publique France, OCDE, Médiamétrie)
+// ============================================================
+const DATA = {
+  lifeExpectancy: { M: 80.4, F: 85.9 },
+  sleepPerNight: 6.92,
+  eatingPerDay: 2.22,
+  workHoursPerYear: 1661,
+  careerYears: 42,
+  screenHoursPerDay: 4,
+  meetingHoursPerWeek: 10.2,
+  workWeeksPerYear: 46,
+  vacationDaysPerYear: 33,
+  houseworkHoursPerDay: { M: 2, F: 3.43 },
+  schoolYears: 19,
+  heartbeatsPerDay: 100000,
+  bloodLitersPerDay: 7200,
+  breathsPerDay: 20000,
+  blinksPerDay: 14400,
+  blinkDurationSec: 0.3,
+  sunSpeedKmH: 107226,
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+const qs = s => document.querySelector(s);
+const qi = s => document.getElementById(s);
+const qsa = s => document.querySelectorAll(s);
+function t(fr, en) { return lang === 'fr' ? fr : en; }
+
+function formatNum(n) {
+  const s = Math.round(n).toString();
+  return lang === 'fr'
+    ? s.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0')
+    : s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function formatDec(n, d) {
+  d = d || 1;
+  const s = Number(n).toFixed(d);
+  return lang === 'fr' ? s.replace('.', ',') : s;
+}
+
+// ============================================================
+// I18N
+// ============================================================
+function setLang(l) {
+  lang = l;
+  try { localStorage.setItem('tvec-lang', l); } catch(e) {}
+  applyLang();
+  if (qi('results').style.display === 'block') discover(true);
+}
+
+function applyLang() {
+  const f = lang === 'fr';
+  document.documentElement.lang = lang;
+  document.title = f ? 'Ta Vie en Chiffres — Combien de temps te reste-t-il ?' : 'Your Life in Numbers — How much time do you have left?';
+
+  // Meta
+  const md = qs('meta[name="description"]'); if (md) md.content = f
+    ? 'Découvre ta vie en chiffres : temps passé à dormir, manger, travailler, scroller... et combien d\'étés il te reste.'
+    : 'Discover your life in numbers: time spent sleeping, eating, working, scrolling... and how many summers you have left.';
+  const ogt = qs('meta[property="og:title"]'); if (ogt) ogt.content = f ? 'Ta Vie en Chiffres' : 'Your Life in Numbers';
+  const ogd = qs('meta[property="og:description"]'); if (ogd) ogd.content = f
+    ? 'Découvre combien de temps tu as passé à dormir, manger, travailler...'
+    : 'Discover how much time you\'ve spent sleeping, eating, working...';
+
+  // Hero
+  qs('.hero-title').innerHTML = f ? 'Ta Vie en <span>Chiffres</span>' : 'Your Life in <span>Numbers</span>';
+  qs('.hero-subtitle').textContent = f
+    ? 'Découvre combien de temps tu as passé à dormir, manger, travailler... et combien d\'étés il te reste.'
+    : 'Discover how much time you\'ve spent sleeping, eating, working... and how many summers you have left.';
+
+  // Input labels
+  qs('label[for="nameInput"]').textContent = f ? 'Ton prénom' : 'Your first name';
+  qi('nameInput').placeholder = f ? 'Optionnel' : 'Optional';
+  qs('label[for="birthDate"]').textContent = f ? 'Date de naissance' : 'Date of birth';
+  qi('labelSex').textContent = f ? 'Sexe' : 'Sex';
+
+  // Sex toggle
+  const sexBtns = qsa('.sex-toggle button');
+  sexBtns[0].textContent = f ? 'Homme' : 'Male';
+  sexBtns[1].textContent = f ? 'Femme' : 'Female';
+
+  // Quick questions
+  qi('qqTitle').textContent = f ? 'Quelques questions (30 sec)' : 'A few questions (30 sec)';
+  qi('qlCoffee').textContent = f ? 'Tu bois du café ?' : 'Do you drink coffee?';
+  qi('qlCommute').textContent = f ? 'Ton trajet domicile-travail ?' : 'Your commute?';
+  qi('qlOffice').textContent = f ? 'Tu travailles en bureau ?' : 'Do you work in an office?';
+  qi('qlCook').textContent = f ? 'Tu cuisines ?' : 'Do you cook?';
+
+  const setTexts = (btns, texts) => btns.forEach((b, i) => { if (texts[i]) b.textContent = texts[i]; });
+  setTexts(qsa('[data-q="coffee"] button'), f ? ['Non', '1-2 / jour', '3+ / jour'] : ['No', '1-2 / day', '3+ / day']);
+  setTexts(qsa('[data-q="commute"] button'), f ? ['Pas de trajet', '< 30 min', '30-60 min', '> 1h'] : ['No commute', '< 30 min', '30-60 min', '> 1h']);
+  setTexts(qsa('[data-q="office"] button'), f ? ['Non', 'Oui'] : ['No', 'Yes']);
+  setTexts(qsa('[data-q="cook"] button'), f ? ['Rarement', 'Souvent', 'Tous les jours'] : ['Rarely', 'Often', 'Every day']);
+
+  // CTA
+  qi('btnDiscover').textContent = f ? 'Découvrir ma vie en chiffres' : 'Discover my life in numbers';
+  qi('privacyNote').textContent = f ? 'Aucune donnée stockée. Tout est calculé dans ton navigateur.' : 'No data stored. Everything is calculated in your browser.';
+
+  // Results static elements
+  qs('.weeks-title').textContent = f ? 'Ta vie en semaines' : 'Your life in weeks';
+  qs('.weeks-subtitle').textContent = f ? 'Chaque case = 1 semaine. Chaque ligne = 1 an.' : 'Each cell = 1 week. Each row = 1 year.';
+  const wSpans = qsa('.weeks-legend-item span');
+  if (wSpans.length >= 3) {
+    wSpans[0].textContent = f ? 'Vécu' : 'Lived';
+    wSpans[1].textContent = f ? 'Cette semaine' : 'This week';
+    wSpans[2].textContent = f ? 'À venir' : 'Remaining';
+  }
+  qs('.pie-title').textContent = f ? 'Répartition de ta vie' : 'Your life breakdown';
+  qs('.pie-subtitle').textContent = f ? 'En années estimées sur une vie entière' : 'Estimated years over a full lifetime';
+  qs('.final-title').innerHTML = f
+    ? 'Profite de chaque <span style="color:var(--accent)">instant</span>.'
+    : 'Make every <span style="color:var(--accent)">moment</span> count.';
+  qs('.final-text').textContent = f
+    ? 'Ce ne sont que des moyennes. Ta vie, c\'est toi qui la dessines.'
+    : 'These are just averages. Your life is yours to design.';
+  qs('.btn-restart').textContent = f ? 'Recommencer' : 'Start over';
+  qs('.footer-sources').textContent = f
+    ? 'Sources : INSEE, DARES, Santé publique France, OCDE, Médiamétrie, Arcep, IFOP'
+    : 'Sources: INSEE, DARES, French Public Health, OECD, Médiamétrie, Arcep, IFOP';
+  qs('.footer-made').textContent = f ? 'Fait avec soin en France. Aucune donnée collectée.' : 'Made with care in France. No data collected.';
+  qi('scrollHint').innerHTML = f ? '&#x2193; Scroll pour découvrir' : '&#x2193; Scroll to discover';
+
+  // Lang toggle active state
+  qsa('.lang-toggle button').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+}
+
+// ============================================================
+// UI
+// ============================================================
+function selectSex(sex, btn) {
+  userInput.sex = sex;
+  qsa('.sex-toggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  checkReady();
+}
+
+function selectOption(key, value, btn) {
+  userInput[key] = value;
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function checkReady() {
+  qi('btnDiscover').disabled = !userInput.sex || !qi('birthDate').value;
+}
+
+qi('birthDate').addEventListener('change', checkReady);
+
+// ============================================================
+// COMPUTE
+// ============================================================
+function compute() {
+  const birth = new Date(qi('birthDate').value);
+  userInput.birthDate = birth;
+  const now = new Date();
+  if (isNaN(birth.getTime()) || birth > now) return null;
+
+  const ageDays = Math.floor((now - birth) / 86400000);
+  const ageYears = ageDays / 365.25;
+  const lifeExp = DATA.lifeExpectancy[userInput.sex];
+  const remainingYears = Math.max(0, lifeExp - ageYears);
+
+  // Body stats
+  const heartbeats = Math.round(ageDays * DATA.heartbeatsPerDay);
+  const bloodLiters = Math.round(ageDays * DATA.bloodLitersPerDay);
+  const breaths = Math.round(ageDays * DATA.breathsPerDay);
+  const blinks = Math.round(ageDays * DATA.blinksPerDay);
+  const blinkDarkDays = Math.round((blinks * DATA.blinkDurationSec) / 86400);
+
+  // Cosmic
+  const sunKm = ageYears * 365.25 * 24 * DATA.sunSpeedKmH;
+  const sunBillionKm = sunKm / 1e9;
+  const earthMoonTrips = Math.round(sunKm / (384400 * 2));
+
+  // Sleep
+  const sleepYears = (DATA.sleepPerNight / 24) * ageYears;
+  const sleepYearsLife = (DATA.sleepPerNight / 24) * lifeExp;
+
+  // Eating
+  const mealsEaten = Math.round(ageYears * 365.25 * 3);
+  const eatingYearsLife = (DATA.eatingPerDay / 24) * lifeExp;
+
+  // Coffee
+  const coffeeTotal = userInput.coffee > 0 ? Math.round(userInput.coffee * 365.25 * Math.max(0, ageYears - 16)) : 0;
+
+  // Work
+  const workingYears = Math.min(Math.max(0, ageYears - 22), DATA.careerYears);
+  const workHoursTotal = workingYears * DATA.workHoursPerYear;
+  const workYearsOfLife = (DATA.workHoursPerYear * DATA.careerYears) / (365.25 * 24);
+
+  // Commute
+  const commuteMinPerDay = userInput.commute * 2;
+  const commuteYears = (commuteMinPerDay / 60 / 24) * workingYears * (230 / 365.25);
+  const commuteYearsLife = (commuteMinPerDay / 60 / 24) * DATA.careerYears * (230 / 365.25);
+
+  // Screens
+  const screenYears = (DATA.screenHoursPerDay / 24) * Math.max(0, ageYears - 10);
+  const screenYearsLife = (DATA.screenHoursPerDay / 24) * (lifeExp - 10);
+
+  // Meetings
+  const meetingDaysPerYear = userInput.office ? (DATA.meetingHoursPerWeek * DATA.workWeeksPerYear) / 8 : 0;
+
+  // Housework
+  const houseworkHours = DATA.houseworkHoursPerDay[userInput.sex];
+  const houseworkYearsLife = (houseworkHours / 24) * lifeExp;
+
+  // Weekends & Summers
+  const weekendsLived = Math.round(ageYears * 52);
+  const weekendsRemaining = Math.round(remainingYears * 52);
+  const summersRemaining = Math.round(remainingYears);
+
+  return {
+    daysAlive: ageDays, ageYears, lifeExp, remainingYears,
+    heartbeats, bloodLiters, breaths, blinks, blinkDarkDays,
+    sunBillionKm, earthMoonTrips,
+    sleepYears, sleepYearsLife,
+    mealsEaten, eatingYearsLife,
+    coffeeTotal,
+    workYearsOfLife, workHoursTotal, workingYears,
+    commuteYears, commuteYearsLife,
+    screenYears, screenYearsLife,
+    meetingDaysPerYear,
+    houseworkYearsLife,
+    weekendsLived, weekendsRemaining, summersRemaining,
+  };
+}
+
+// ============================================================
+// SVG ICONS
+// ============================================================
+const ICONS = {
+  x: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+  linkedin: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z"/></svg>',
+  whatsapp: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>',
+};
+
+// ============================================================
+// DISCOVER (RENDER STATS)
+// ============================================================
+function discover(rerender) {
+  if (!userInput.sex || !qi('birthDate').value) return;
+  const stats = compute();
+  if (!stats) return;
+
+  const container = qi('statsContainer');
+  container.innerHTML = '';
+  const fn = formatNum;
+  const fd = formatDec;
+  const name = qi('nameInput').value.trim();
+  const np = name ? name + ', t' : 'T';  // "Pierre, tu" or "Tu"
+  const npy = name ? name + ', y' : 'Y'; // "Pierre, you" or "You"
+  const poolCount = fd(stats.bloodLiters / 2500000, 1);
+
+  const sections = [];
+
+  // 1. Days alive
+  sections.push({
+    emoji: '&#x1F4C5;', color: 'white',
+    target: stats.daysAlive, decimals: 0,
+    unit: t('jours', 'days'),
+    label: t(
+      `${np}u es en vie depuis <strong>${fn(stats.daysAlive)} jours</strong>`,
+      `${npy}ou've been alive for <strong>${fn(stats.daysAlive)} days</strong>`
+    ),
+    detail: t(
+      `Soit ${fd(stats.ageYears)} ans, ${fn(Math.round(stats.daysAlive * 24))} heures, ${fn(Math.round(stats.daysAlive * 24 * 60))} minutes.`,
+      `That's ${fd(stats.ageYears)} years, ${fn(Math.round(stats.daysAlive * 24))} hours, ${fn(Math.round(stats.daysAlive * 24 * 60))} minutes.`
+    ),
+  });
+
+  // 2. Heartbeats
+  sections.push({
+    emoji: '&#x2764;&#xFE0F;', color: 'pink',
+    target: stats.heartbeats, decimals: 0,
+    unit: t('battements de cœur', 'heartbeats'),
+    label: t(
+      `Ton cœur a pompé <strong>${fn(stats.bloodLiters)} litres</strong> de sang`,
+      `Your heart has pumped <strong>${fn(stats.bloodLiters)} liters</strong> of blood`
+    ),
+    detail: t(
+      `Assez pour remplir ${poolCount} piscines olympiques. Il bat ~100 000 fois par jour, sans jamais s'arrêter.`,
+      `Enough to fill ${poolCount} Olympic pools. It beats ~100,000 times a day, never stopping.`
+    ),
+    source: t('Fédération Française de Cardiologie', 'French Cardiology Federation'),
+  });
+
+  // 3. Sleep
+  sections.push({
+    emoji: '&#x1F634;', color: 'blue',
+    target: parseFloat(stats.sleepYears.toFixed(1)), decimals: 1,
+    unit: t('ans à dormir', 'years sleeping'),
+    label: t(
+      `${np}u as déjà passé <strong>${fd(stats.sleepYears)} ans à dormir</strong>`,
+      `${npy}ou've already spent <strong>${fd(stats.sleepYears)} years sleeping</strong>`
+    ),
+    detail: t(
+      `6h55 par nuit en moyenne. Sur une vie entière : ~${fd(stats.sleepYearsLife, 0)} ans les yeux fermés.`,
+      `6h55 per night on average. Over a full life: ~${fd(stats.sleepYearsLife, 0)} years with your eyes closed.`
+    ),
+    source: t('Santé publique France', 'French Public Health'),
+  });
+
+  // 4. Eating
+  sections.push({
+    emoji: '&#x1F37D;', color: '',
+    target: stats.mealsEaten, decimals: 0,
+    unit: t('repas avalés', 'meals eaten'),
+    label: t(
+      `${np}u as mangé environ <strong>${fn(stats.mealsEaten)} repas</strong>`,
+      `${npy}ou've eaten about <strong>${fn(stats.mealsEaten)} meals</strong>`
+    ),
+    detail: t(
+      `Les Français passent 2h13/jour à table : record mondial. Sur ta vie : ~${fd(stats.eatingYearsLife)} ans à manger.`,
+      `The French spend 2h13/day eating: a world record. Over your life: ~${fd(stats.eatingYearsLife)} years eating.`
+    ),
+    source: 'INSEE / OCDE',
+  });
+
+  // 5. Coffee
+  if (userInput.coffee > 0 && stats.coffeeTotal > 0) {
+    const cupH = 10; // cm
+    const heightM = (stats.coffeeTotal * cupH / 100).toFixed(0);
+    const eiffelTimes = fd(stats.coffeeTotal * cupH / 33000, 1);
+    sections.push({
+      emoji: '&#x2615;', color: '',
+      target: stats.coffeeTotal, decimals: 0,
+      unit: t('cafés bus', 'coffees drunk'),
+      label: t(
+        `${np}u as bu environ <strong>${fn(stats.coffeeTotal)} cafés</strong>`,
+        `${npy}ou've drunk about <strong>${fn(stats.coffeeTotal)} coffees</strong>`
+      ),
+      detail: t(
+        `Empilées, tes tasses feraient ${fn(heightM)}m de haut — ${eiffelTimes}× la Tour Eiffel. La France est 6e mondiale.`,
+        `Stacked, your cups would reach ${fn(heightM)}m — ${eiffelTimes}× the Eiffel Tower. France ranks 6th worldwide.`
+      ),
+      source: 'Collectif Café 2024',
+    });
+  }
+
+  // 6. Work
+  sections.push({
+    emoji: '&#x1F4BC;', color: 'pink',
+    target: parseFloat(stats.workYearsOfLife.toFixed(1)), decimals: 1,
+    unit: t('ans de travail', 'years of work'),
+    label: t(
+      `Tu passeras <strong>~${fd(stats.workYearsOfLife)} ans à travailler</strong> dans ta vie`,
+      `You'll spend <strong>~${fd(stats.workYearsOfLife)} years working</strong> in your life`
+    ),
+    detail: t(
+      `1 661 heures/an en moyenne, sur une carrière de ~42 ans.${stats.workHoursTotal > 0 ? ' Déjà ' + fn(Math.round(stats.workHoursTotal)) + 'h effectuées.' : ''}`,
+      `1,661 hours/year on average, over a ~42-year career.${stats.workHoursTotal > 0 ? ' Already ' + fn(Math.round(stats.workHoursTotal)) + 'h done.' : ''}`
+    ),
+    source: 'DARES 2024',
+  });
+
+  // 7. Commute
+  if (userInput.commute > 0) {
+    sections.push({
+      emoji: '&#x1F68B;', color: '',
+      target: parseFloat(stats.commuteYearsLife.toFixed(1)), decimals: 1,
+      unit: t('ans dans les transports', 'years commuting'),
+      label: t(
+        `<strong>${fd(stats.commuteYearsLife)} ans</strong> de ta vie dans les transports`,
+        `<strong>${fd(stats.commuteYearsLife)} years</strong> of your life commuting`
+      ),
+      detail: t(
+        `${userInput.commute * 2} min/jour aller-retour, 230 jours/an.${stats.commuteYears > 0 ? ' Déjà ' + fd(stats.commuteYears) + ' ans passés.' : ''}`,
+        `${userInput.commute * 2} min/day round trip, 230 days/year.${stats.commuteYears > 0 ? ' Already ' + fd(stats.commuteYears) + ' years done.' : ''}`
+      ),
+    });
+  }
+
+  // 8. Screens
+  sections.push({
+    emoji: '&#x1F4F1;', color: 'pink',
+    target: parseFloat(stats.screenYearsLife.toFixed(1)), decimals: 1,
+    unit: t('ans sur un écran', 'years on a screen'),
+    label: t(
+      `<strong>${fd(stats.screenYearsLife)} ans</strong> de ta vie sur un écran`,
+      `<strong>${fd(stats.screenYearsLife)} years</strong> of your life on a screen`
+    ),
+    detail: t(
+      `4h/jour en moyenne. Déjà ${fd(stats.screenYears)} ans passés depuis tes 10 ans.`,
+      `4h/day on average. Already ${fd(stats.screenYears)} years since age 10.`
+    ),
+    source: 'Arcep / CREDOC 2025',
+  });
+
+  // 9. Meetings
+  if (userInput.office) {
+    sections.push({
+      emoji: '&#x1F4CB;', color: '',
+      target: Math.round(stats.meetingDaysPerYear), decimals: 0,
+      unit: t('jours/an en réunion', 'days/year in meetings'),
+      label: t(
+        `<strong>${Math.round(stats.meetingDaysPerYear)} jours par an</strong> en réunion`,
+        `<strong>${Math.round(stats.meetingDaysPerYear)} days per year</strong> in meetings`
+      ),
+      detail: t(
+        `Plus que tes ${DATA.vacationDaysPerYear} jours de vacances. 3 réunions sur 4 ne produisent aucune décision.`,
+        `More than your ${DATA.vacationDaysPerYear} vacation days. 3 out of 4 meetings produce no decision.`
+      ),
+      source: 'IFOP / Wisembly',
+    });
+  }
+
+  // 10. Housework
+  sections.push({
+    emoji: userInput.sex === 'F' ? '&#x1F614;' : '&#x1F9F9;', color: '',
+    target: parseFloat(stats.houseworkYearsLife.toFixed(1)), decimals: 1,
+    unit: t('ans de tâches ménagères', 'years of housework'),
+    label: t(
+      `<strong>${fd(stats.houseworkYearsLife)} ans</strong> de ménage, lessive, rangement`,
+      `<strong>${fd(stats.houseworkYearsLife)} years</strong> of cleaning, laundry, tidying`
+    ),
+    detail: t(
+      userInput.sex === 'F'
+        ? 'Les femmes font 3h26/jour de tâches domestiques. Les hommes : 2h. Écart : 1h26.'
+        : 'Les hommes font 2h/jour de tâches domestiques. Les femmes : 3h26. Écart : 1h26.',
+      userInput.sex === 'F'
+        ? 'Women do 3h26/day of housework. Men: 2h. Gap: 1h26.'
+        : 'Men do 2h/day of housework. Women: 3h26. Gap: 1h26.'
+    ),
+    source: 'INSEE',
+  });
+
+  // 11. Blinks / darkness
+  sections.push({
+    emoji: '&#x1F441;&#xFE0F;', color: 'blue',
+    target: stats.blinkDarkDays, decimals: 0,
+    unit: t('jours dans le noir', 'days in darkness'),
+    label: t(
+      `Juste en <strong>clignant des yeux</strong>`,
+      `Just from <strong>blinking</strong>`
+    ),
+    detail: t(
+      `~${fn(stats.blinks)} clignements à 0,3 sec chacun. Soit ${fd(stats.blinkDarkDays / 365.25)} an les paupières fermées sans le savoir.`,
+      `~${fn(stats.blinks)} blinks at 0.3 sec each. That's ${fd(stats.blinkDarkDays / 365.25)} years with your eyes closed without knowing.`
+    ),
+  });
+
+  // 12. Distance around the sun
+  sections.push({
+    emoji: '&#x1F30D;', color: 'green',
+    target: parseFloat(stats.sunBillionKm.toFixed(1)), decimals: 1,
+    unit: t('milliards de km', 'billion km'),
+    label: t(
+      `Parcourus autour du <strong>Soleil</strong>`,
+      `Traveled around the <strong>Sun</strong>`
+    ),
+    detail: t(
+      `Soit ${fn(stats.earthMoonTrips)} allers-retours Terre-Lune. Tu files à 107 000 km/h sans le savoir.`,
+      `That's ${fn(stats.earthMoonTrips)} round trips to the Moon. You're flying at 107,000 km/h without knowing.`
+    ),
+  });
+
+  // 13. Weekends remaining
+  sections.push({
+    emoji: '&#x1F389;', color: 'green',
+    target: stats.weekendsRemaining, decimals: 0,
+    unit: t('week-ends restants', 'weekends remaining'),
+    label: t(
+      `Il te reste environ <strong>${fn(stats.weekendsRemaining)} week-ends</strong>`,
+      `You have about <strong>${fn(stats.weekendsRemaining)} weekends</strong> left`
+    ),
+    detail: t(
+      `${fn(stats.weekendsLived)} déjà vécus. Chaque samedi compte.`,
+      `${fn(stats.weekendsLived)} already lived. Every Saturday counts.`
+    ),
+  });
+
+  // 14. Summers remaining (the punch)
+  sections.push({
+    emoji: '&#x2600;', color: '',
+    target: stats.summersRemaining, decimals: 0,
+    unit: t('étés', 'summers'),
+    label: t(
+      `Il te reste environ <strong>${stats.summersRemaining} étés</strong>`,
+      `You have about <strong>${stats.summersRemaining} summers</strong> left`
+    ),
+    detail: '',
+    punch: true,
+  });
+
+  // Build HTML
+  for (const s of sections) {
+    const div = document.createElement('div');
+    div.className = 'stat-section';
+    div.innerHTML = `
+      <div class="stat-emoji">${s.emoji}</div>
+      <div class="stat-number ${s.color}" data-target="${s.target}" data-decimals="${s.decimals || 0}" data-suffix="${s.suffix || ''}">0</div>
+      ${s.unit ? `<div style="font-size:18px;color:var(--text-dim);margin-bottom:16px;font-weight:600">${s.unit}</div>` : ''}
+      <div class="stat-label">${s.label}</div>
+      ${s.detail ? `<div class="stat-detail">${s.detail}</div>` : ''}
+      ${s.source ? `<div class="stat-source">Source : ${s.source}</div>` : ''}
+      ${s.punch ? '<div style="margin-top:24px;font-size:20px;color:var(--text-dim);font-weight:300">' + t('Profite de chacun d\'entre eux.', 'Make each one count.') + '</div>' : ''}
+    `;
+    container.appendChild(div);
+  }
+
+  // Life progress bar
+  const pct = Math.min(100, (stats.ageYears / stats.lifeExp) * 100);
+  const progressDiv = document.createElement('div');
+  progressDiv.className = 'stat-section';
+  progressDiv.innerHTML = `
+    <div class="stat-emoji">&#x23F3;</div>
+    <div class="stat-number" data-target="${pct.toFixed(1)}" data-decimals="1" data-suffix="%">0</div>
+    <div class="stat-label">${t('de ta vie est derrière toi', 'of your life is behind you')}</div>
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" style="background:var(--accent)" data-width="${pct}"></div>
+      </div>
+      <div class="progress-labels">
+        <span>${t('Naissance', 'Birth')}</span>
+        <span>${t('Espérance', 'Life exp.')}: ${stats.lifeExp} ${t('ans', 'yrs')}</span>
+      </div>
+    </div>
+    <div class="stat-source">Source : INSEE 2025</div>
+  `;
+  container.appendChild(progressDiv);
+
+  generateWeeksGrid(stats);
+  generatePieChart(stats);
+  generateShareButtons(stats);
+
+  if (!rerender) {
+    qi('inputScreen').classList.add('fade-out');
+    setTimeout(() => {
+      qi('inputScreen').style.display = 'none';
+      qi('results').style.display = 'block';
+      qi('scrollHint').style.opacity = '1';
+      setupObservers();
+      window.scrollTo(0, 0);
+    }, 500);
+  } else {
+    qsa('.stat-section, .weeks-section').forEach(el => el.classList.add('visible'));
+    // Re-animate numbers in view
+    qsa('.stat-number[data-target]').forEach(el => {
+      el.dataset.animated = '';
+      animateNumber(el);
+    });
+    const fills = qsa('.progress-fill[data-width]');
+    fills.forEach(f => f.style.width = f.dataset.width + '%');
+  }
+}
+
+// ============================================================
+// WEEKS GRID
+// ============================================================
+function generateWeeksGrid(stats) {
+  const grid = qi('weeksGrid');
+  grid.innerHTML = '';
+  const totalWeeks = Math.round(stats.lifeExp * 52);
+  const livedWeeks = Math.round(stats.ageYears * 52);
+  for (let i = 0; i < totalWeeks; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'week-cell';
+    if (i < livedWeeks) cell.classList.add('lived');
+    if (i === livedWeeks) cell.classList.add('current');
+    grid.appendChild(cell);
+  }
+}
+
+// ============================================================
+// PIE CHART
+// ============================================================
+function generatePieChart(stats) {
+  const lifeExp = stats.lifeExp;
+  const sleepH = DATA.sleepPerNight * 365.25 * lifeExp;
+  const eatingH = DATA.eatingPerDay * 365.25 * lifeExp;
+  const schoolH = 6 * 180 * DATA.schoolYears;
+  const workH = DATA.workHoursPerYear * DATA.careerYears;
+  const commuteH = (userInput.commute * 2 / 60) * 230 * DATA.careerYears;
+  const houseworkH = DATA.houseworkHoursPerDay[userInput.sex] * 365.25 * (lifeExp - 18);
+  const cookH = (userInput.cook / 60) * 365.25 * (lifeExp - 18);
+  const screenLeisureH = 2.5 * 365.25 * (lifeExp - 6);
+
+  const toYears = h => h / (365.25 * 24);
+  const slices = [
+    { label: t('Sommeil', 'Sleep'), years: toYears(sleepH), color: '#3b82f6' },
+    { label: t('Travail', 'Work'), years: toYears(workH), color: '#ec4899' },
+    { label: t('Scolarité', 'School'), years: toYears(schoolH), color: '#06b6d4' },
+    { label: t('Repas', 'Meals'), years: toYears(eatingH), color: '#f59e0b' },
+    { label: t('Écrans (loisirs)', 'Screens (leisure)'), years: toYears(screenLeisureH), color: '#8b5cf6' },
+    { label: t('Ménage', 'Housework'), years: toYears(houseworkH), color: '#6b7280' },
+  ];
+  if (userInput.commute > 0) slices.push({ label: t('Transports', 'Commute'), years: toYears(commuteH), color: '#14b8a6' });
+  if (userInput.cook > 0) slices.push({ label: t('Cuisine', 'Cooking'), years: toYears(cookH), color: '#f97316' });
+
+  const usedYears = slices.reduce((a, s) => a + s.years, 0);
+  slices.push({ label: t('Temps libre', 'Free time'), years: Math.max(0, lifeExp - usedYears), color: '#22c55e' });
+  slices.sort((a, b) => b.years - a.years);
+
+  let angle = 0;
+  const parts = [];
+  for (const s of slices) {
+    const deg = (s.years / lifeExp) * 360;
+    parts.push(`${s.color} ${angle}deg ${angle + deg}deg`);
+    angle += deg;
+  }
+
+  qi('pieChart').style.background = `conic-gradient(${parts.join(', ')})`;
+  qi('pieLegend').innerHTML = slices.map(s =>
+    `<div class="pie-legend-item"><div class="pie-legend-dot" style="background:${s.color}"></div>${s.label} (${formatDec(s.years)} ${t('ans', 'yrs')})</div>`
+  ).join('');
+}
+
+// ============================================================
+// SHARE BUTTONS
+// ============================================================
+function generateShareButtons(stats) {
+  const name = qi('nameInput').value.trim();
+  const text = t(
+    `J'ai vécu ${formatNum(stats.daysAlive)} jours, passé ${formatDec(stats.sleepYears)} ans à dormir, et il me reste ~${stats.summersRemaining} étés. Découvre ta vie en chiffres :`,
+    `I've lived ${formatNum(stats.daysAlive)} days, spent ${formatDec(stats.sleepYears)} years sleeping, and have ~${stats.summersRemaining} summers left. Discover your life in numbers:`
+  );
+  const url = window.location.href.split('?')[0];
+  const encoded = encodeURIComponent(text + ' ' + url);
+
+  qi('shareButtons').innerHTML = `
+    <a href="https://twitter.com/intent/tweet?text=${encoded}" target="_blank" rel="noopener">${ICONS.x} Twitter</a>
+    <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}" target="_blank" rel="noopener">${ICONS.linkedin} LinkedIn</a>
+    <a href="https://wa.me/?text=${encoded}" target="_blank" rel="noopener">${ICONS.whatsapp} WhatsApp</a>
+    <a href="#" onclick="copyLink();return false;">${ICONS.copy} ${t('Copier le lien', 'Copy link')}</a>
+  `;
+}
+
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href.split('?')[0]).then(() => {
+    const btn = qs('.share-buttons a:last-child');
+    const orig = btn.innerHTML;
+    btn.innerHTML = ICONS.copy + ' ' + t('Copié !', 'Copied!');
+    setTimeout(() => btn.innerHTML = orig, 2000);
+  });
+}
+
+// ============================================================
+// COUNTER ANIMATION
+// ============================================================
+function animateNumber(el) {
+  const target = parseFloat(el.dataset.target);
+  if (isNaN(target) || target === 0) {
+    el.textContent = '0';
+    return;
+  }
+  const decimals = parseInt(el.dataset.decimals || '0');
+  const suffix = el.dataset.suffix || '';
+  const duration = 1500;
+  const start = performance.now();
+
+  function tick(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    const val = target * ease;
+    el.textContent = (decimals > 0 ? formatDec(val, decimals) : formatNum(Math.round(val))) + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+
+  el.textContent = (decimals > 0 ? formatDec(0, decimals) : '0') + suffix;
+  requestAnimationFrame(tick);
+}
+
+// ============================================================
+// SCROLL OBSERVER
+// ============================================================
+let currentObserver = null;
+function setupObservers() {
+  if (currentObserver) currentObserver.disconnect();
+
+  currentObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+
+        const numEl = entry.target.querySelector('.stat-number[data-target]');
+        if (numEl && !numEl.dataset.animated) {
+          numEl.dataset.animated = '1';
+          animateNumber(numEl);
+        }
+
+        const fill = entry.target.querySelector('.progress-fill');
+        if (fill) setTimeout(() => fill.style.width = fill.dataset.width + '%', 200);
+      }
+    });
+  }, { threshold: 0.2 });
+
+  qsa('.stat-section, .weeks-section').forEach(el => currentObserver.observe(el));
+
+  let hintHidden = false;
+  window.addEventListener('scroll', () => {
+    if (!hintHidden && window.scrollY > 200) {
+      qi('scrollHint').style.opacity = '0';
+      hintHidden = true;
+    }
+  }, { passive: true });
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function restart() {
+  qi('results').style.display = 'none';
+  qi('inputScreen').style.display = 'flex';
+  qi('inputScreen').classList.remove('fade-out');
+  qi('scrollHint').style.opacity = '0';
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+const ogUrl = qs('meta[property="og:url"]');
+if (ogUrl) ogUrl.content = window.location.href.split('?')[0];
+applyLang();
+checkReady();
+</script>
+</body>
+</html>
