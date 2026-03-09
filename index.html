@@ -1217,11 +1217,11 @@ function discover(rerender) {
       ${s.unit ? `<div style="font-size:18px;color:var(--text-dim);margin-bottom:16px;font-weight:600">${s.unit}</div>` : ''}
       <div class="stat-label">${s.label}</div>
       ${s.detail ? `<div class="stat-detail">${s.detail}</div>` : ''}
-      ${s.source ? `<div class="stat-source">Source : ${s.source}</div>` : ''}
+      ${s.source ? `<div class="stat-source">${t('Source : ', 'Source: ')}${s.source}</div>` : ''}
       ${s.punch ? '<div class="stoic-quote">' + t(
         '« Le problème, c\'est que tu penses avoir le temps. »',
         '"The trouble is, you think you have time."'
-      ) + '<span class="quote-author">— Bouddha</span></div>' : ''}
+      ) + '<span class="quote-author">— ' + t('Bouddha', 'Buddha') + '</span></div>' : ''}
       ${shareText ? `<button class="stat-share-btn" onclick="shareStat(this, '${escHtml(shareText.replace(/'/g, "\\'"))}')">${ICONS.share} ${t('Partager', 'Share')}</button>` : ''}
     `;
     container.appendChild(div);
@@ -1244,7 +1244,7 @@ function discover(rerender) {
         <span>${t('Espérance', 'Life exp.')}: ${stats.lifeExp} ${t('ans', 'yrs')}</span>
       </div>
     </div>
-    <div class="stat-source">Source : INSEE 2025</div>
+    <div class="stat-source">${t('Source : INSEE 2025', 'Source: INSEE 2025')}</div>
   `;
   container.appendChild(progressDiv);
 
@@ -1312,13 +1312,15 @@ function discover(rerender) {
         `${stats.badges.length} badge${stats.badges.length > 1 ? 's' : ''} unlocked`
       )}</div>
       <div class="badges-grid">
-        ${stats.badges.map(b => `
+        ${stats.badges.map(b => {
+          const tierLabel = { common: t('COMMUN', 'COMMON'), rare: t('RARE', 'RARE'), epic: t('ÉPIQUE', 'EPIC'), legendary: t('LÉGENDAIRE', 'LEGENDARY') };
+          return `
           <div class="badge ${b.tier}">
             <div class="badge-icon">${b.icon}</div>
             <div class="badge-name">${b.name}</div>
-            <div class="badge-tier">${b.tier}</div>
-          </div>
-        `).join('')}
+            <div class="badge-tier">${tierLabel[b.tier] || b.tier}</div>
+          </div>`;
+        }).join('')}
       </div>
     `;
     container.appendChild(badgesDiv);
