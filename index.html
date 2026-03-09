@@ -2,10 +2,29 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>Ta Vie en Chiffres — Combien de temps te reste-t-il ?</title>
 <meta name="description" content="Découvre ta vie en chiffres : temps passé à dormir, manger, travailler, scroller... et combien d'étés il te reste. Données INSEE.">
 <link rel="canonical" href="https://tavieenchiffres.com/">
+<link rel="alternate" hreflang="fr" href="https://tavieenchiffres.com/">
+<link rel="alternate" hreflang="en" href="https://tavieenchiffres.com/?lang=en">
+<link rel="alternate" hreflang="x-default" href="https://tavieenchiffres.com/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Ta Vie en Chiffres",
+  "url": "https://tavieenchiffres.com",
+  "description": "Découvre ta vie en chiffres : temps passé à dormir, manger, travailler, scroller... et combien d'étés il te reste.",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires JavaScript",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "inLanguage": ["fr", "en"],
+  "author": { "@type": "Person", "name": "Loïc Guillout" },
+  "image": "https://tavieenchiffres.com/og-image.png"
+}
+</script>
 <meta property="og:title" content="Ta Vie en Chiffres — Combien de temps te reste-t-il ?">
 <meta property="og:description" content="Découvre ta vie en chiffres : temps passé à dormir, manger, travailler, scroller... et combien d'étés il te reste. Données INSEE.">
 <meta property="og:type" content="website">
@@ -389,7 +408,14 @@ footer a { color: #555; }
   .input-card { padding: 24px 20px; }
   .stat-section { min-height: 80vh; padding: 32px 20px; }
   .weeks-grid { gap: 0.5px; }
-  .q-options button { padding: 6px 12px; font-size: 13px; }
+  .q-options button { min-height: 44px; padding: 10px 16px; font-size: 14px; }
+  .sex-toggle button { min-height: 48px; font-size: 16px; }
+  .btn-discover { min-height: 52px; font-size: 18px; }
+  .btn-restart { min-height: 48px; }
+  .lang-toggle button { min-height: 44px; min-width: 44px; padding: 8px 14px; }
+  .question .q-label { font-size: 16px; }
+  .stat-share-btn { min-height: 44px; padding: 10px 16px; font-size: 13px; }
+  footer { padding: 24px 16px; }
 }
 
 .fade-out { opacity: 0; transition: opacity 0.5s ease; }
@@ -981,6 +1007,9 @@ const ICONS = {
 // ============================================================
 function discover(rerender) {
   if (!userInput.sex || !qi('birthDate').value) return;
+  requestAnimationFrame(() => _discover(rerender));
+}
+function _discover(rerender) {
   const stats = compute();
   if (!stats) return;
 
