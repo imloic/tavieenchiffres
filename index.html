@@ -12,10 +12,14 @@
 <meta property="og:image" content="og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap">
+<!-- Fonts served locally — no external requests (GDPR compliant) -->
 <style>
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 300; font-display: swap; src: url(fonts/inter-300.woff2) format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url(fonts/inter-400.woff2) format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url(fonts/inter-600.woff2) format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 800; font-display: swap; src: url(fonts/inter-800.woff2) format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 900; font-display: swap; src: url(fonts/inter-900.woff2) format('woff2'); }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -569,7 +573,15 @@ footer a { color: #555; }
 
   <footer>
     <p class="footer-sources">Sources : INSEE, DARES, Santé publique France, OCDE, Médiamétrie, Arcep, IFOP</p>
+    <p class="footer-disclaimer" style="margin-top:8px;max-width:600px;margin-left:auto;margin-right:auto">Les résultats sont des estimations basées sur des moyennes statistiques nationales. Ils ne constituent ni un avis médical, ni un diagnostic, ni une prédiction individuelle. L'espérance de vie utilisée est une donnée statistique de l'INSEE et ne présage en rien de la durée de vie réelle d'une personne.</p>
     <p class="footer-made" style="margin-top:8px">Fait avec soin en France. Aucune donnée collectée.</p>
+    <p class="footer-privacy" style="margin-top:8px">Aucune donnée personnelle n'est collectée, stockée ni transmise à des tiers. Tous les calculs sont effectués localement dans votre navigateur. Les polices sont hébergées localement — aucune requête externe n'est effectuée.</p>
+    <p class="footer-legal" style="margin-top:12px"><a href="#" onclick="document.getElementById('mentionsLegales').style.display=document.getElementById('mentionsLegales').style.display==='block'?'none':'block';return false;">Mentions légales</a></p>
+    <div id="mentionsLegales" style="display:none;margin-top:12px;text-align:left;max-width:500px;margin-left:auto;margin-right:auto;padding:16px;background:#111;border-radius:8px;font-size:12px;color:#666">
+      <p><strong style="color:#999">Éditeur :</strong> Loïc Guillout</p>
+      <p style="margin-top:4px"><strong style="color:#999">Hébergement :</strong> Hostinger International Ltd — Jonavos g. 60C, Kaunas 44192, Lituanie</p>
+      <p style="margin-top:4px"><strong style="color:#999">Contact :</strong> loic@guillout.com</p>
+    </div>
   </footer>
 </div>
 
@@ -780,6 +792,13 @@ function applyLang() {
     ? 'Sources : INSEE, DARES, Santé publique France, OCDE, Médiamétrie, Arcep, IFOP'
     : 'Sources: INSEE, DARES, French Public Health, OECD, Médiamétrie, Arcep, IFOP';
   qs('.footer-made').textContent = f ? 'Fait avec soin en France. Aucune donnée collectée.' : 'Made with care in France. No data collected.';
+  qs('.footer-disclaimer').textContent = f
+    ? 'Les résultats sont des estimations basées sur des moyennes statistiques nationales. Ils ne constituent ni un avis médical, ni un diagnostic, ni une prédiction individuelle. L\'espérance de vie utilisée est une donnée statistique de l\'INSEE et ne présage en rien de la durée de vie réelle d\'une personne.'
+    : 'Results are estimates based on national statistical averages. They do not constitute medical advice, a diagnosis, or an individual prediction. Life expectancy figures are statistical data from INSEE and do not predict any individual\'s actual lifespan.';
+  qs('.footer-privacy').textContent = f
+    ? 'Aucune donnée personnelle n\'est collectée, stockée ni transmise à des tiers. Tous les calculs sont effectués localement dans votre navigateur. Ce site utilise Google Fonts, ce qui implique un transfert de votre adresse IP vers Google LLC (États-Unis).'
+    : 'No personal data is collected, stored, or transmitted to third parties. All calculations are performed locally in your browser. Fonts are self-hosted — no external requests are made.';
+  qs('.footer-legal a').textContent = f ? 'Mentions légales' : 'Legal notice';
   qi('scrollHint').innerHTML = f ? '&#x2193; Scroll pour découvrir' : '&#x2193; Scroll to discover';
 
   // Lang toggle active state
