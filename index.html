@@ -343,6 +343,7 @@ body {
 }
 .share-buttons a:hover { border-color: var(--accent); transform: translateY(-1px); }
 .share-buttons a svg { flex-shrink: 0; }
+.share-buttons a.share-download { border-color: var(--accent); background: rgba(255, 107, 53, 0.08); }
 
 .scroll-hint {
   position: fixed;
@@ -401,7 +402,7 @@ footer a { color: #555; }
 
     <div class="input-group">
       <label for="birthDate">Date de naissance</label>
-      <input type="date" id="birthDate" min="1930-01-01" max="2012-12-31">
+      <input type="date" id="birthDate" min="1930-01-01">
     </div>
 
     <div class="input-group">
@@ -546,6 +547,12 @@ function formatDec(n, d) {
   d = d || 1;
   const s = Number(n).toFixed(d);
   return lang === 'fr' ? s.replace('.', ',') : s;
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
 }
 
 // ============================================================
@@ -743,6 +750,8 @@ const ICONS = {
   linkedin: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z"/></svg>',
   whatsapp: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>',
   copy: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>',
+  download: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  instagram: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C16.67.014 16.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>',
 };
 
 // ============================================================
@@ -757,7 +766,8 @@ function discover(rerender) {
   container.innerHTML = '';
   const fn = formatNum;
   const fd = formatDec;
-  const name = qi('nameInput').value.trim();
+  const rawName = qi('nameInput').value.trim();
+  const name = escHtml(rawName);
   const np = name ? name + ', t' : 'T';  // "Pierre, tu" or "Tu"
   const npy = name ? name + ', y' : 'Y'; // "Pierre, you" or "You"
   const poolCount = fd(stats.bloodLiters / 2500000, 1);
@@ -805,8 +815,8 @@ function discover(rerender) {
       `${npy}ou've already spent <strong>${fd(stats.sleepYears)} years sleeping</strong>`
     ),
     detail: t(
-      `6h55 par nuit en moyenne. Sur une vie entière : ~${fd(stats.sleepYearsLife, 0)} ans les yeux fermés.`,
-      `6h55 per night on average. Over a full life: ~${fd(stats.sleepYearsLife, 0)} years with your eyes closed.`
+      `${Math.floor(DATA.sleepPerNight)}h${Math.round((DATA.sleepPerNight % 1) * 60).toString().padStart(2, '0')} par nuit en moyenne. Sur une vie entière : ~${fd(stats.sleepYearsLife, 0)} ans les yeux fermés.`,
+      `${Math.floor(DATA.sleepPerNight)}h${Math.round((DATA.sleepPerNight % 1) * 60).toString().padStart(2, '0')} per night on average. Over a full life: ~${fd(stats.sleepYearsLife, 0)} years with your eyes closed.`
     ),
     source: t('Santé publique France', 'French Public Health'),
   });
@@ -821,8 +831,8 @@ function discover(rerender) {
       `${npy}ou've eaten about <strong>${fn(stats.mealsEaten)} meals</strong>`
     ),
     detail: t(
-      `Les Français passent 2h13/jour à table : record mondial. Sur ta vie : ~${fd(stats.eatingYearsLife)} ans à manger.`,
-      `The French spend 2h13/day eating: a world record. Over your life: ~${fd(stats.eatingYearsLife)} years eating.`
+      `Les Français passent ${Math.floor(DATA.eatingPerDay)}h${Math.round((DATA.eatingPerDay % 1) * 60).toString().padStart(2, '0')}/jour à table : record mondial. Sur ta vie : ~${fd(stats.eatingYearsLife)} ans à manger.`,
+      `The French spend ${Math.floor(DATA.eatingPerDay)}h${Math.round((DATA.eatingPerDay % 1) * 60).toString().padStart(2, '0')}/day eating: a world record. Over your life: ~${fd(stats.eatingYearsLife)} years eating.`
     ),
     source: 'INSEE / OCDE',
   });
@@ -858,8 +868,8 @@ function discover(rerender) {
       `You'll spend <strong>~${fd(stats.workYearsOfLife)} years working</strong> in your life`
     ),
     detail: t(
-      `1 661 heures/an en moyenne, sur une carrière de ~42 ans.${stats.workHoursTotal > 0 ? ' Déjà ' + fn(Math.round(stats.workHoursTotal)) + 'h effectuées.' : ''}`,
-      `1,661 hours/year on average, over a ~42-year career.${stats.workHoursTotal > 0 ? ' Already ' + fn(Math.round(stats.workHoursTotal)) + 'h done.' : ''}`
+      `${fn(DATA.workHoursPerYear)} heures/an en moyenne, sur une carrière de ~${DATA.careerYears} ans.${stats.workHoursTotal > 0 ? ' Déjà ' + fn(Math.round(stats.workHoursTotal)) + 'h effectuées.' : ''}`,
+      `${fn(DATA.workHoursPerYear)} hours/year on average, over a ~${DATA.careerYears}-year career.${stats.workHoursTotal > 0 ? ' Already ' + fn(Math.round(stats.workHoursTotal)) + 'h done.' : ''}`
     ),
     source: 'DARES 2024',
   });
@@ -891,8 +901,8 @@ function discover(rerender) {
       `<strong>${fd(stats.screenYearsLife)} years</strong> of your life on a screen`
     ),
     detail: t(
-      `4h/jour en moyenne. Déjà ${fd(stats.screenYears)} ans passés depuis tes 10 ans.`,
-      `4h/day on average. Already ${fd(stats.screenYears)} years since age 10.`
+      `${DATA.screenHoursPerDay}h/jour en moyenne. Déjà ${fd(stats.screenYears)} ans passés depuis tes 10 ans.`,
+      `${DATA.screenHoursPerDay}h/day on average. Already ${fd(stats.screenYears)} years since age 10.`
     ),
     source: 'Arcep / CREDOC 2025',
   });
@@ -909,7 +919,7 @@ function discover(rerender) {
       ),
       detail: t(
         `Plus que tes ${DATA.vacationDaysPerYear} jours de vacances. 3 réunions sur 4 ne produisent aucune décision.`,
-        `More than your ${DATA.vacationDaysPerYear} vacation days. 3 out of 4 meetings produce no decision.`
+      `More than your ${DATA.vacationDaysPerYear} vacation days. 3 out of 4 meetings produce no decision.`
       ),
       source: 'IFOP / Wisembly',
     });
@@ -945,8 +955,8 @@ function discover(rerender) {
       `Just from <strong>blinking</strong>`
     ),
     detail: t(
-      `~${fn(stats.blinks)} clignements à 0,3 sec chacun. Soit ${fd(stats.blinkDarkDays / 365.25)} an les paupières fermées sans le savoir.`,
-      `~${fn(stats.blinks)} blinks at 0.3 sec each. That's ${fd(stats.blinkDarkDays / 365.25)} years with your eyes closed without knowing.`
+      `~${fn(stats.blinks)} clignements à ${DATA.blinkDurationSec.toFixed(1).replace('.', ',')} sec chacun. Soit ${fd(stats.blinkDarkDays / 365.25)} ${stats.blinkDarkDays / 365.25 >= 2 ? 'ans' : 'an'} les paupières fermées sans le savoir.`,
+      `~${fn(stats.blinks)} blinks at ${DATA.blinkDurationSec} sec each. That's ${fd(stats.blinkDarkDays / 365.25)} years with your eyes closed without knowing.`
     ),
   });
 
@@ -960,8 +970,8 @@ function discover(rerender) {
       `Traveled around the <strong>Sun</strong>`
     ),
     detail: t(
-      `Soit ${fn(stats.earthMoonTrips)} allers-retours Terre-Lune. Tu files à 107 000 km/h sans le savoir.`,
-      `That's ${fn(stats.earthMoonTrips)} round trips to the Moon. You're flying at 107,000 km/h without knowing.`
+      `Soit ${fn(stats.earthMoonTrips)} allers-retours Terre-Lune. Tu files à ${fn(DATA.sunSpeedKmH)} km/h sans le savoir.`,
+      `That's ${fn(stats.earthMoonTrips)} round trips to the Moon. You're flying at ${fn(DATA.sunSpeedKmH)} km/h without knowing.`
     ),
   });
 
@@ -1132,17 +1142,144 @@ function generateShareButtons(stats) {
     <a href="https://twitter.com/intent/tweet?text=${encoded}" target="_blank" rel="noopener">${ICONS.x} Twitter</a>
     <a href="https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}" target="_blank" rel="noopener">${ICONS.linkedin} LinkedIn</a>
     <a href="https://wa.me/?text=${encoded}" target="_blank" rel="noopener">${ICONS.whatsapp} WhatsApp</a>
-    <a href="#" onclick="copyLink();return false;">${ICONS.copy} ${t('Copier le lien', 'Copy link')}</a>
+    <a href="#" data-action="copy" onclick="copyLink();return false;">${ICONS.copy} ${t('Copier le lien', 'Copy link')}</a>
+    <a href="#" onclick="generateShareCard('post');return false;" class="share-download">${ICONS.instagram} ${t('Post Instagram', 'Instagram Post')}</a>
+    <a href="#" onclick="generateShareCard('story');return false;" class="share-download">${ICONS.download} ${t('Story Instagram', 'Instagram Story')}</a>
   `;
 }
 
 function copyLink() {
   navigator.clipboard.writeText(window.location.href.split('?')[0]).then(() => {
-    const btn = qs('.share-buttons a:last-child');
+    const btn = qs('[data-action="copy"]');
     const orig = btn.innerHTML;
     btn.innerHTML = ICONS.copy + ' ' + t('Copié !', 'Copied!');
     setTimeout(() => btn.innerHTML = orig, 2000);
   });
+}
+
+// ============================================================
+// CANVAS SHARE CARD
+// ============================================================
+async function generateShareCard(format) {
+  const stats = compute();
+  if (!stats) return;
+  const rawName = qi('nameInput').value.trim();
+  const name = rawName || '';
+
+  const isStory = format === 'story';
+  const W = 1080;
+  const H = isStory ? 1920 : 1080;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle gradient overlay
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, 'rgba(255, 107, 53, 0.06)');
+  grad.addColorStop(1, 'rgba(59, 130, 246, 0.04)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Accent line at top
+  ctx.fillStyle = '#ff6b35';
+  ctx.fillRect(0, 0, W, 4);
+
+  // Font helper
+  const font = (w, s) => `${w} ${s}px Inter, -apple-system, sans-serif`;
+
+  // Title
+  const titleY = isStory ? 160 : 100;
+  ctx.font = font('800', isStory ? 52 : 46);
+  ctx.fillStyle = '#f5f5f5';
+  const title = t('Ta Vie en Chiffres', 'Your Life in Numbers');
+  ctx.textAlign = 'center';
+  ctx.fillText(title, W / 2, titleY);
+
+  // Subtitle with name
+  ctx.font = font('300', isStory ? 32 : 28);
+  ctx.fillStyle = '#94a3b8';
+  const subtitle = name
+    ? t(`Les chiffres de ${name}`, `${name}'s numbers`)
+    : t('Tes chiffres de vie', 'Your life numbers');
+  ctx.fillText(subtitle, W / 2, titleY + (isStory ? 56 : 48));
+
+  // Key stats
+  const statItems = [
+    { emoji: '\u2764\uFE0F', value: formatNum(stats.heartbeats), label: t('battements de c\u0153ur', 'heartbeats'), color: '#ec4899' },
+    { emoji: '\uD83D\uDCA4', value: formatDec(stats.sleepYears) + ' ' + t('ans', 'yrs'), label: t('pass\u00E9s \u00E0 dormir', 'spent sleeping'), color: '#3b82f6' },
+    { emoji: '\uD83C\uDF1D', value: formatDec(stats.sunBillionKm, 1) + ' ' + t('Mds km', 'B km'), label: t('autour du Soleil', 'around the Sun'), color: '#22c55e' },
+    { emoji: '\uD83D\uDC41\uFE0F', value: formatNum(stats.blinkDarkDays) + ' ' + t('jours', 'days'), label: t('dans le noir (clignements)', 'in darkness (blinks)'), color: '#3b82f6' },
+    { emoji: '\u2600\uFE0F', value: String(stats.summersRemaining), label: t('\u00E9t\u00E9s restants', 'summers left'), color: '#ff6b35' },
+  ];
+
+  const startY = isStory ? 360 : 240;
+  const gap = isStory ? 230 : 130;
+
+  ctx.textAlign = 'center';
+  statItems.forEach((item, i) => {
+    const y = startY + i * gap;
+
+    // Emoji
+    ctx.font = font('400', isStory ? 42 : 36);
+    ctx.fillStyle = '#f5f5f5';
+    ctx.fillText(item.emoji, W / 2, y);
+
+    // Value
+    ctx.font = font('900', isStory ? 56 : 48);
+    ctx.fillStyle = item.color;
+    ctx.fillText(item.value, W / 2, y + (isStory ? 58 : 48));
+
+    // Label
+    ctx.font = font('400', isStory ? 26 : 22);
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(item.label, W / 2, y + (isStory ? 92 : 78));
+  });
+
+  // Progress bar
+  const pct = Math.min(100, (stats.ageYears / stats.lifeExp) * 100);
+  const barY = isStory ? startY + 5 * gap + 20 : startY + 5 * gap + 10;
+  const barW = W * 0.6;
+  const barH = isStory ? 20 : 16;
+  const barX = (W - barW) / 2;
+
+  // Bar background
+  ctx.fillStyle = '#1e1e1e';
+  ctx.beginPath();
+  ctx.roundRect(barX, barY, barW, barH, barH / 2);
+  ctx.fill();
+
+  // Bar fill
+  ctx.fillStyle = '#ff6b35';
+  ctx.beginPath();
+  ctx.roundRect(barX, barY, barW * (pct / 100), barH, barH / 2);
+  ctx.fill();
+
+  // Progress text
+  ctx.font = font('600', isStory ? 24 : 20);
+  ctx.fillStyle = '#f5f5f5';
+  ctx.fillText(formatDec(pct, 1) + '% ' + t('de ta vie', 'of your life'), W / 2, barY + barH + (isStory ? 36 : 30));
+
+  // Footer / URL
+  const footY = isStory ? H - 100 : H - 50;
+  ctx.font = font('600', isStory ? 30 : 26);
+  ctx.fillStyle = '#ff6b35';
+  ctx.fillText('tavieenchiffres.guillout.com', W / 2, footY);
+
+  ctx.font = font('300', isStory ? 22 : 18);
+  ctx.fillStyle = '#64748b';
+  ctx.fillText(t('Découvre tes chiffres', 'Discover your numbers'), W / 2, footY + (isStory ? 40 : 32));
+
+  // Download
+  const link = document.createElement('a');
+  link.download = `tavieenchiffres-${format}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 }
 
 // ============================================================
@@ -1222,6 +1359,10 @@ function restart() {
 // ============================================================
 const ogUrl = qs('meta[property="og:url"]');
 if (ogUrl) ogUrl.content = window.location.href.split('?')[0];
+// Dynamic max: 12 years ago
+const maxDate = new Date();
+maxDate.setFullYear(maxDate.getFullYear() - 12);
+qi('birthDate').max = maxDate.toISOString().split('T')[0];
 applyLang();
 checkReady();
 </script>
