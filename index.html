@@ -379,6 +379,84 @@ footer a { color: #555; }
 }
 
 .fade-out { opacity: 0; transition: opacity 0.5s ease; }
+
+/* === PER-STAT SHARE === */
+.stat-share-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 12px; padding: 6px 14px;
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+  background: rgba(255,255,255,0.05); border: 1px solid #333; border-radius: 8px;
+  color: var(--text-dim); cursor: pointer; transition: all 0.2s;
+}
+.stat-share-btn:hover { border-color: var(--accent); color: var(--text); }
+.stat-share-btn svg { width: 14px; height: 14px; }
+
+/* === LIVE COUNTER === */
+.live-counter {
+  font-size: clamp(14px, 2vw, 18px);
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+/* === BADGES === */
+.badges-grid {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  justify-content: center; max-width: 600px; margin-top: 24px;
+}
+.badge {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px 20px; background: var(--bg-card);
+  border: 1px solid #222; border-radius: 14px;
+  min-width: 120px; text-align: center; transition: all 0.3s;
+}
+.badge.legendary { border-color: #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.15); }
+.badge.epic { border-color: #8b5cf6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.12); }
+.badge.rare { border-color: #3b82f6; }
+.badge .badge-icon { font-size: 28px; margin-bottom: 6px; }
+.badge .badge-name { font-size: 12px; font-weight: 700; color: var(--text); }
+.badge .badge-tier { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+.badge.legendary .badge-tier { color: #f59e0b; }
+.badge.epic .badge-tier { color: #8b5cf6; }
+.badge.rare .badge-tier { color: #3b82f6; }
+.badge .badge-tier { color: #6b7280; }
+
+/* === PLANETS === */
+.planets-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px; max-width: 600px; width: 100%; margin-top: 24px;
+}
+.planet-card {
+  background: var(--bg-card); border: 1px solid #222;
+  border-radius: 12px; padding: 16px; text-align: center;
+}
+.planet-card .planet-emoji { font-size: 28px; }
+.planet-card .planet-name { font-size: 13px; color: var(--text-dim); font-weight: 600; margin-top: 4px; }
+.planet-card .planet-age { font-size: 22px; font-weight: 900; color: var(--text); margin-top: 4px; }
+.planet-card .planet-unit { font-size: 11px; color: var(--text-dim); }
+
+/* === INFO CARD (zodiac, generation) === */
+.info-chips {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  justify-content: center; margin-top: 16px;
+}
+.info-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; background: var(--bg-card);
+  border: 1px solid #222; border-radius: 10px;
+  font-size: 14px; font-weight: 600; color: var(--text);
+}
+.info-chip .chip-emoji { font-size: 18px; }
+
+/* === QUOTE === */
+.stoic-quote {
+  font-size: 18px; font-style: italic; color: var(--text-dim);
+  font-weight: 300; max-width: 500px; text-align: center;
+  margin-top: 24px; line-height: 1.6;
+}
+.stoic-quote .quote-author { display: block; font-style: normal; font-size: 14px; margin-top: 8px; color: #555; }
 </style>
 </head>
 <body>
@@ -526,6 +604,20 @@ const DATA = {
   blinksPerDay: 14400,
   blinkDurationSec: 0.3,
   sunSpeedKmH: 107226,
+  // Body growth
+  hairGrowthCmPerDay: 0.035,
+  nailGrowthCmPerDay: 0.01,
+  wordsPerDay: 16000,
+  stepsPerDay: 7500,
+  // Planets (orbital period in Earth days)
+  planets: [
+    { name: ['Mercure', 'Mercury'], emoji: '☿️', days: 87.97 },
+    { name: ['Vénus', 'Venus'], emoji: '♀️', days: 224.7 },
+    { name: ['Mars', 'Mars'], emoji: '♂️', days: 687 },
+    { name: ['Jupiter', 'Jupiter'], emoji: '♃', days: 4333 },
+    { name: ['Saturne', 'Saturn'], emoji: '♄', days: 10759 },
+    { name: ['Neptune', 'Neptune'], emoji: '♆', days: 60190 },
+  ],
 };
 
 // ============================================================
@@ -553,6 +645,59 @@ function escHtml(s) {
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
+}
+
+// ============================================================
+// ZODIAC, GENERATION, CHINESE ZODIAC
+// ============================================================
+function getZodiac(month, day) {
+  const signs = [
+    { fr: 'Capricorne', en: 'Capricorn', emoji: '♑', end: [1, 19] },
+    { fr: 'Verseau', en: 'Aquarius', emoji: '♒', end: [2, 18] },
+    { fr: 'Poissons', en: 'Pisces', emoji: '♓', end: [3, 20] },
+    { fr: 'Bélier', en: 'Aries', emoji: '♈', end: [4, 19] },
+    { fr: 'Taureau', en: 'Taurus', emoji: '♉', end: [5, 20] },
+    { fr: 'Gémeaux', en: 'Gemini', emoji: '♊', end: [6, 20] },
+    { fr: 'Cancer', en: 'Cancer', emoji: '♋', end: [7, 22] },
+    { fr: 'Lion', en: 'Leo', emoji: '♌', end: [8, 22] },
+    { fr: 'Vierge', en: 'Virgo', emoji: '♍', end: [9, 22] },
+    { fr: 'Balance', en: 'Libra', emoji: '♎', end: [10, 22] },
+    { fr: 'Scorpion', en: 'Scorpio', emoji: '♏', end: [11, 21] },
+    { fr: 'Sagittaire', en: 'Sagittarius', emoji: '♐', end: [12, 21] },
+    { fr: 'Capricorne', en: 'Capricorn', emoji: '♑', end: [12, 31] },
+  ];
+  for (const s of signs) {
+    if (month < s.end[0] || (month === s.end[0] && day <= s.end[1]))
+      return s;
+  }
+  return signs[0];
+}
+
+function getChineseZodiac(year) {
+  const animals = [
+    { fr: 'Rat', en: 'Rat', emoji: '🐀' },
+    { fr: 'Buffle', en: 'Ox', emoji: '🐂' },
+    { fr: 'Tigre', en: 'Tiger', emoji: '🐅' },
+    { fr: 'Lapin', en: 'Rabbit', emoji: '🐇' },
+    { fr: 'Dragon', en: 'Dragon', emoji: '🐉' },
+    { fr: 'Serpent', en: 'Snake', emoji: '🐍' },
+    { fr: 'Cheval', en: 'Horse', emoji: '🐴' },
+    { fr: 'Chèvre', en: 'Goat', emoji: '🐐' },
+    { fr: 'Singe', en: 'Monkey', emoji: '🐒' },
+    { fr: 'Coq', en: 'Rooster', emoji: '🐓' },
+    { fr: 'Chien', en: 'Dog', emoji: '🐕' },
+    { fr: 'Cochon', en: 'Pig', emoji: '🐷' },
+  ];
+  return animals[(year - 4) % 12];
+}
+
+function getGeneration(year) {
+  if (year >= 2013) return { fr: 'Génération Alpha', en: 'Gen Alpha', emoji: '👶' };
+  if (year >= 1997) return { fr: 'Génération Z', en: 'Gen Z', emoji: '📱' };
+  if (year >= 1981) return { fr: 'Millénial', en: 'Millennial', emoji: '💻' };
+  if (year >= 1965) return { fr: 'Génération X', en: 'Gen X', emoji: '📺' };
+  if (year >= 1946) return { fr: 'Baby Boomer', en: 'Baby Boomer', emoji: '🎸' };
+  return { fr: 'Génération Silencieuse', en: 'Silent Generation', emoji: '📻' };
 }
 
 // ============================================================
@@ -726,6 +871,44 @@ function compute() {
   const weekendsRemaining = Math.round(remainingYears * 52);
   const summersRemaining = Math.round(remainingYears);
 
+  // Body growth
+  const hairCm = Math.round(ageDays * DATA.hairGrowthCmPerDay);
+  const nailCm = (ageDays * DATA.nailGrowthCmPerDay).toFixed(0);
+  const wordsSpoken = Math.round(ageDays * DATA.wordsPerDay);
+  const stepsWalked = Math.round(ageDays * DATA.stepsPerDay);
+  const stepsKm = Math.round(stepsWalked * 0.0007); // ~70cm per step
+
+  // Planetary ages
+  const planetaryAges = DATA.planets.map(p => ({
+    ...p,
+    age: ageDays / p.days,
+  }));
+
+  // Zodiac / Generation
+  const zodiac = getZodiac(birth.getMonth() + 1, birth.getDate());
+  const chineseZodiac = getChineseZodiac(birth.getFullYear());
+  const generation = getGeneration(birth.getFullYear());
+
+  // Badges
+  const badges = [];
+  const d = ageDays;
+  if (d >= 1000) badges.push({ icon: '🎯', name: t('1 000 jours', '1,000 days'), tier: 'common' });
+  if (d >= 5000) badges.push({ icon: '🌟', name: t('5 000 jours', '5,000 days'), tier: 'rare' });
+  if (d >= 10000) badges.push({ icon: '💎', name: t('10 000 jours', '10,000 days'), tier: 'epic' });
+  if (d >= 20000) badges.push({ icon: '👑', name: t('20 000 jours', '20,000 days'), tier: 'legendary' });
+  if (d >= 1337) badges.push({ icon: '🎮', name: '1337 LEET', tier: 'legendary' });
+  if (d >= 3141) badges.push({ icon: '🥧', name: 'π 3141', tier: 'epic' });
+  if (d >= 7777) badges.push({ icon: '🍀', name: '7777 Lucky', tier: 'rare' });
+  if (ageYears >= 18) badges.push({ icon: '🔓', name: t('Majorité', 'Adult'), tier: 'common' });
+  if (ageYears >= 30) badges.push({ icon: '🏠', name: t('Trentenaire', 'Thirties'), tier: 'common' });
+  if (ageYears >= 50) badges.push({ icon: '🏆', name: t('Demi-siècle', 'Half century'), tier: 'epic' });
+  const pctLife = (ageYears / lifeExp) * 100;
+  if (pctLife >= 25) badges.push({ icon: '¼', name: t('Quart de vie', 'Quarter life'), tier: 'common' });
+  if (pctLife >= 50) badges.push({ icon: '½', name: t('Mi-vie', 'Halfway'), tier: 'epic' });
+
+  // Alternative futures
+  const screenHalfSaved = (DATA.screenHoursPerDay / 2 / 24) * remainingYears;
+
   return {
     daysAlive: ageDays, ageYears, lifeExp, remainingYears,
     heartbeats, bloodLiters, breaths, blinks, blinkDarkDays,
@@ -739,6 +922,10 @@ function compute() {
     meetingDaysPerYear,
     houseworkYearsLife,
     weekendsLived, weekendsRemaining, summersRemaining,
+    hairCm, nailCm, wordsSpoken, stepsWalked, stepsKm,
+    planetaryAges, zodiac, chineseZodiac, generation, badges,
+    screenHalfSaved,
+    birthDate: birth,
   };
 }
 
@@ -751,6 +938,7 @@ const ICONS = {
   whatsapp: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>',
   copy: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>',
   download: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  share: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
   instagram: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C16.67.014 16.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>',
 };
 
@@ -990,7 +1178,22 @@ function discover(rerender) {
     ),
   });
 
-  // 14. Summers remaining (the punch)
+  // 14. Body stats (hair, words, steps)
+  sections.push({
+    emoji: '&#x1F9B0;', color: '',
+    target: stats.hairCm, decimals: 0,
+    unit: t('cm de cheveux poussés', 'cm of hair grown'),
+    label: t(
+      `Tes cheveux ont poussé de <strong>${fn(stats.hairCm)} cm</strong>`,
+      `Your hair has grown <strong>${fn(stats.hairCm)} cm</strong>`
+    ),
+    detail: t(
+      `${fn(stats.wordsSpoken)} mots prononcés. ${fn(stats.stepsWalked)} pas marchés — soit ~${fn(stats.stepsKm)} km, ${fd(stats.stepsKm / 40075, 1)}× le tour de la Terre.`,
+      `${fn(stats.wordsSpoken)} words spoken. ${fn(stats.stepsWalked)} steps walked — ~${fn(stats.stepsKm)} km, ${fd(stats.stepsKm / 40075, 1)}× around the Earth.`
+    ),
+  });
+
+  // 15. Summers remaining (the punch)
   sections.push({
     emoji: '&#x2600;', color: '',
     target: stats.summersRemaining, decimals: 0,
@@ -1003,8 +1206,9 @@ function discover(rerender) {
     punch: true,
   });
 
-  // Build HTML
+  // Build HTML (with per-stat share button)
   for (const s of sections) {
+    const shareText = s.unit ? `${s.target} ${s.unit}` : '';
     const div = document.createElement('div');
     div.className = 'stat-section';
     div.innerHTML = `
@@ -1014,7 +1218,11 @@ function discover(rerender) {
       <div class="stat-label">${s.label}</div>
       ${s.detail ? `<div class="stat-detail">${s.detail}</div>` : ''}
       ${s.source ? `<div class="stat-source">Source : ${s.source}</div>` : ''}
-      ${s.punch ? '<div style="margin-top:24px;font-size:20px;color:var(--text-dim);font-weight:300">' + t('Profite de chacun d\'entre eux.', 'Make each one count.') + '</div>' : ''}
+      ${s.punch ? '<div class="stoic-quote">' + t(
+        '« Le problème, c\'est que tu penses avoir le temps. »',
+        '"The trouble is, you think you have time."'
+      ) + '<span class="quote-author">— Bouddha</span></div>' : ''}
+      ${shareText ? `<button class="stat-share-btn" onclick="shareStat(this, '${escHtml(shareText.replace(/'/g, "\\'"))}')">${ICONS.share} ${t('Partager', 'Share')}</button>` : ''}
     `;
     container.appendChild(div);
   }
@@ -1039,6 +1247,98 @@ function discover(rerender) {
     <div class="stat-source">Source : INSEE 2025</div>
   `;
   container.appendChild(progressDiv);
+
+  // ── Live counter section ──
+  const liveDiv = document.createElement('div');
+  liveDiv.className = 'stat-section';
+  liveDiv.innerHTML = `
+    <div class="stat-emoji">&#x23F1;&#xFE0F;</div>
+    <div class="stat-number white" id="liveSeconds" style="font-size:clamp(36px,8vw,72px)">0</div>
+    <div style="font-size:18px;color:var(--text-dim);margin-bottom:8px;font-weight:600">${t('secondes de vie', 'seconds alive')}</div>
+    <div class="live-counter" id="liveHeartbeats"></div>
+    <div class="stat-detail">${t('En temps réel. Chaque seconde compte.', 'In real time. Every second counts.')}</div>
+  `;
+  container.appendChild(liveDiv);
+
+  // ── Zodiac / Generation / Chinese zodiac chips ──
+  const z = stats.zodiac;
+  const cz = stats.chineseZodiac;
+  const gen = stats.generation;
+  const chipsDiv = document.createElement('div');
+  chipsDiv.className = 'stat-section';
+  chipsDiv.innerHTML = `
+    <div class="stat-emoji">&#x2728;</div>
+    <div class="stat-label" style="margin-bottom:8px">${t('Ton identité cosmique', 'Your cosmic identity')}</div>
+    <div class="info-chips">
+      <div class="info-chip"><span class="chip-emoji">${z.emoji}</span> ${t(z.fr, z.en)}</div>
+      <div class="info-chip"><span class="chip-emoji">${cz.emoji}</span> ${t(cz.fr, cz.en)}</div>
+      <div class="info-chip"><span class="chip-emoji">${gen.emoji}</span> ${t(gen.fr, gen.en)}</div>
+    </div>
+  `;
+  container.appendChild(chipsDiv);
+
+  // ── Planetary ages ──
+  const planetsDiv = document.createElement('div');
+  planetsDiv.className = 'stat-section';
+  planetsDiv.innerHTML = `
+    <div class="stat-emoji">&#x1FA90;</div>
+    <div class="stat-label" style="margin-bottom:4px">${t('Ton âge sur d\'autres planètes', 'Your age on other planets')}</div>
+    <div class="stat-detail" style="margin-top:0;margin-bottom:4px">${t(
+      'Sur Neptune, tu n\'as peut-être pas encore fêté ton premier anniversaire.',
+      'On Neptune, you may not have celebrated your first birthday yet.'
+    )}</div>
+    <div class="planets-grid">
+      ${stats.planetaryAges.map(p => `
+        <div class="planet-card">
+          <div class="planet-emoji">${p.emoji}</div>
+          <div class="planet-name">${t(p.name[0], p.name[1])}</div>
+          <div class="planet-age">${p.age >= 1 ? fd(p.age) : fd(p.age, 2)}</div>
+          <div class="planet-unit">${t('ans', 'years')}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  container.appendChild(planetsDiv);
+
+  // ── Achievement badges ──
+  if (stats.badges.length > 0) {
+    const badgesDiv = document.createElement('div');
+    badgesDiv.className = 'stat-section';
+    badgesDiv.innerHTML = `
+      <div class="stat-emoji">&#x1F3C5;</div>
+      <div class="stat-label">${t('Tes badges de vie', 'Your life badges')}</div>
+      <div class="stat-detail">${t(
+        `${stats.badges.length} badge${stats.badges.length > 1 ? 's' : ''} débloqué${stats.badges.length > 1 ? 's' : ''}`,
+        `${stats.badges.length} badge${stats.badges.length > 1 ? 's' : ''} unlocked`
+      )}</div>
+      <div class="badges-grid">
+        ${stats.badges.map(b => `
+          <div class="badge ${b.tier}">
+            <div class="badge-icon">${b.icon}</div>
+            <div class="badge-name">${b.name}</div>
+            <div class="badge-tier">${b.tier}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(badgesDiv);
+  }
+
+  // ── Alternative futures ──
+  const altDiv = document.createElement('div');
+  altDiv.className = 'stat-section';
+  altDiv.innerHTML = `
+    <div class="stat-emoji">&#x1F52E;</div>
+    <div class="stat-label">${t('Et si tu changeais quelque chose ?', 'What if you changed something?')}</div>
+    <div class="stat-detail" style="max-width:550px">${t(
+      `Si tu réduisais ton temps d'écran de moitié, tu gagnerais <strong>${fd(stats.screenHalfSaved)} ans</strong> de temps libre. Soit ~${fn(Math.round(stats.screenHalfSaved * 52))} week-ends de plus.`,
+      `If you cut your screen time in half, you'd gain <strong>${fd(stats.screenHalfSaved)} years</strong> of free time. That's ~${fn(Math.round(stats.screenHalfSaved * 52))} more weekends.`
+    )}</div>
+  `;
+  container.appendChild(altDiv);
+
+  // Start live counter
+  startLiveCounter(stats.birthDate);
 
   generateWeeksGrid(stats);
   generatePieChart(stats);
@@ -1428,6 +1728,42 @@ async function generateShareCard(format) {
     link.click();
     setTimeout(() => URL.revokeObjectURL(link.href), 5000);
   }, 'image/png');
+}
+
+// ============================================================
+// PER-STAT SHARE
+// ============================================================
+function shareStat(btn, text) {
+  const url = window.location.href.split('?')[0];
+  const full = text + ' — ' + t('Découvre ta vie en chiffres', 'Discover your life in numbers') + ' ' + url;
+  if (navigator.share) {
+    navigator.share({ text: full }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(full).then(() => {
+      const orig = btn.innerHTML;
+      btn.innerHTML = ICONS.copy + ' ' + t('Copié !', 'Copied!');
+      setTimeout(() => btn.innerHTML = orig, 2000);
+    });
+  }
+}
+
+// ============================================================
+// LIVE COUNTER
+// ============================================================
+let liveCounterRAF = null;
+function startLiveCounter(birthDate) {
+  if (liveCounterRAF) cancelAnimationFrame(liveCounterRAF);
+  const birthMs = birthDate.getTime();
+  function tick() {
+    const now = Date.now();
+    const secs = Math.floor((now - birthMs) / 1000);
+    const el = qi('liveSeconds');
+    const hb = qi('liveHeartbeats');
+    if (el) el.textContent = formatNum(secs);
+    if (hb) hb.textContent = '❤️ ~' + formatNum(Math.floor(secs * (DATA.heartbeatsPerDay / 86400))) + ' ' + t('battements', 'beats');
+    liveCounterRAF = requestAnimationFrame(tick);
+  }
+  tick();
 }
 
 // ============================================================
