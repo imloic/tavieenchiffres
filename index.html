@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>Ta Vie en Chiffres — Combien de temps te reste-t-il ?</title>
-<meta name="description" content="Découvre ta vie en chiffres : temps passé à dormir, manger, travailler, scroller... et combien d'étés il te reste. Données INSEE.">
+<title>Ta Vie en Chiffres — Espérance de vie et statistiques personnalisées</title>
+<meta name="description" content="Calcule ta vie en chiffres : espérance de vie, temps passé à dormir, manger, travailler, scroller... Statistiques personnalisées basées sur les données INSEE.">
+<meta name="keywords" content="vie en chiffres, espérance de vie, statistiques de vie, calculateur espérance de vie, temps restant, life expectancy calculator, life in numbers">
 <link rel="canonical" href="https://tavieenchiffres.com/">
 <link rel="alternate" hreflang="fr" href="https://tavieenchiffres.com/">
 <link rel="alternate" hreflang="en" href="https://tavieenchiffres.com/?lang=en">
@@ -25,8 +26,8 @@
   "image": "https://tavieenchiffres.com/og-image.png"
 }
 </script>
-<meta property="og:title" content="Ta Vie en Chiffres — Combien de temps te reste-t-il ?">
-<meta property="og:description" content="Découvre ta vie en chiffres : temps passé à dormir, manger, travailler, scroller... et combien d'étés il te reste. Données INSEE.">
+<meta property="og:title" content="Ta Vie en Chiffres — Espérance de vie et statistiques personnalisées">
+<meta property="og:description" content="Calcule ta vie en chiffres : espérance de vie, temps passé à dormir, manger, travailler, scroller... Statistiques personnalisées basées sur les données INSEE.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://tavieenchiffres.com/">
 <meta property="og:image" content="https://tavieenchiffres.com/og-image.png">
@@ -36,10 +37,14 @@
 <meta property="og:locale:alternate" content="en_US">
 <meta property="og:site_name" content="Ta Vie en Chiffres">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Ta Vie en Chiffres — Combien de temps te reste-t-il ?">
-<meta name="twitter:description" content="Découvre ta vie en chiffres : temps passé à dormir, manger, travailler, scroller... et combien d'étés il te reste.">
+<meta name="twitter:title" content="Ta Vie en Chiffres — Espérance de vie et statistiques personnalisées">
+<meta name="twitter:description" content="Calcule ta vie en chiffres : espérance de vie, temps passé à dormir, manger, travailler, scroller... Statistiques personnalisées basées sur les données INSEE.">
 <meta name="twitter:image" content="https://tavieenchiffres.com/og-image.png">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <!-- Fonts served locally — no external requests (GDPR compliant) -->
 <style>
@@ -495,6 +500,7 @@ body {
   pointer-events: none;
   z-index: 100;
   transition: opacity 0.3s;
+  opacity: 0;
 }
 @keyframes bounce {
   0%, 100% { transform: translateX(-50%) translateY(0); }
@@ -710,6 +716,7 @@ footer a { color: #555; }
   </div>
 
   <p id="privacyNote" style="color:#888;font-size:12px;margin-top:24px">Aucune donnée stockée. Tout est calculé dans ton navigateur. Une préférence de langue est stockée localement (localStorage) et n'est jamais transmise.</p>
+  <p id="homeSources" style="color:#888;font-size:12px;margin-top:12px">Statistiques basées sur les données de l'<a href="https://www.insee.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">INSEE</a>, <a href="https://dares.travail-emploi.gouv.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">DARES</a>, <a href="https://www.santepubliquefrance.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">Santé publique France</a>, <a href="https://www.oecd.org/fr/" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">OCDE</a>, <a href="https://www.mediametrie.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">Médiamétrie</a>, <a href="https://www.arcep.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">Arcep</a> et <a href="https://www.ifop.com" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">IFOP</a>.</p>
   <p id="homeLegal" style="margin-top:12px"><a href="#" style="color:#999;font-size:12px;text-decoration:underline" onclick="document.getElementById('mentionsLegalesHome').style.display=document.getElementById('mentionsLegalesHome').style.display==='block'?'none':'block';return false;">Mentions légales</a></p>
   <div id="mentionsLegalesHome" style="display:none;margin-top:12px;text-align:left;max-width:500px;margin-left:auto;margin-right:auto;padding:16px;background:#111;border-radius:8px;font-size:12px;color:#666">
     <p><strong style="color:#999">Éditeur :</strong> Loïc Guillout</p>
@@ -748,7 +755,7 @@ footer a { color: #555; }
   </div>
 
   <footer>
-    <p class="footer-sources">Sources : INSEE, DARES, Santé publique France, OCDE, Médiamétrie, Arcep, IFOP</p>
+    <p class="footer-sources">Sources : <a href="https://www.insee.fr" target="_blank" rel="noopener">INSEE</a>, <a href="https://dares.travail-emploi.gouv.fr" target="_blank" rel="noopener">DARES</a>, <a href="https://www.santepubliquefrance.fr" target="_blank" rel="noopener">Santé publique France</a>, <a href="https://www.oecd.org/fr/" target="_blank" rel="noopener">OCDE</a>, <a href="https://www.mediametrie.fr" target="_blank" rel="noopener">Médiamétrie</a>, <a href="https://www.arcep.fr" target="_blank" rel="noopener">Arcep</a>, <a href="https://www.ifop.com" target="_blank" rel="noopener">IFOP</a></p>
     <p class="footer-disclaimer" style="margin-top:8px;max-width:600px;margin-left:auto;margin-right:auto">Les résultats sont des estimations basées sur des moyennes statistiques nationales. Ils ne constituent ni un avis médical, ni un diagnostic, ni une prédiction individuelle. L'espérance de vie utilisée est une donnée statistique de l'INSEE et ne présage en rien de la durée de vie réelle d'une personne.</p>
     <p class="footer-made" style="margin-top:8px">Fait avec soin en France. Aucune donnée collectée.</p>
     <p class="footer-privacy" style="margin-top:8px">Aucune donnée personnelle n'est collectée, stockée ni transmise à des tiers. Tous les calculs sont effectués localement dans votre navigateur. Les polices sont hébergées localement — aucune requête externe n'est effectuée. Une préférence de langue est stockée localement dans votre navigateur (localStorage) et n'est jamais transmise.</p>
@@ -919,16 +926,16 @@ function setLang(l) {
 function applyLang() {
   const f = lang === 'fr';
   document.documentElement.lang = lang;
-  document.title = f ? 'Ta Vie en Chiffres — Combien de temps te reste-t-il ?' : 'Your Life in Numbers — How much time do you have left?';
+  document.title = f ? 'Ta Vie en Chiffres — Espérance de vie et statistiques personnalisées' : 'Your Life in Numbers — Life expectancy & personalized statistics';
 
   // Meta
   const md = qs('meta[name="description"]'); if (md) md.content = f
-    ? 'Découvre ta vie en chiffres : temps passé à dormir, manger, travailler, scroller... et combien d\'étés il te reste.'
-    : 'Discover your life in numbers: time spent sleeping, eating, working, scrolling... and how many summers you have left.';
-  const ogt = qs('meta[property="og:title"]'); if (ogt) ogt.content = f ? 'Ta Vie en Chiffres' : 'Your Life in Numbers';
+    ? 'Calcule ta vie en chiffres : espérance de vie, temps passé à dormir, manger, travailler, scroller... Statistiques personnalisées basées sur les données INSEE.'
+    : 'Calculate your life in numbers: life expectancy, time spent sleeping, eating, working, scrolling... Personalized statistics based on INSEE data.';
+  const ogt = qs('meta[property="og:title"]'); if (ogt) ogt.content = f ? 'Ta Vie en Chiffres — Espérance de vie et statistiques personnalisées' : 'Your Life in Numbers — Life expectancy & personalized statistics';
   const ogd = qs('meta[property="og:description"]'); if (ogd) ogd.content = f
-    ? 'Découvre combien de temps tu as passé à dormir, manger, travailler...'
-    : 'Discover how much time you\'ve spent sleeping, eating, working...';
+    ? 'Calcule ta vie en chiffres : espérance de vie, temps passé à dormir, manger, travailler, scroller... Statistiques personnalisées basées sur les données INSEE.'
+    : 'Calculate your life in numbers: life expectancy, time spent sleeping, eating, working, scrolling... Personalized statistics based on INSEE data.';
 
   // Hero
   qs('.hero-title').innerHTML = f ? 'Ta Vie en <span>Chiffres</span>' : 'Your Life in <span>Numbers</span>';
@@ -963,6 +970,9 @@ function applyLang() {
   // CTA
   qi('btnDiscover').textContent = f ? 'Découvrir ma vie en chiffres' : 'Discover my life in numbers';
   qi('privacyNote').textContent = f ? 'Aucune donnée stockée. Tout est calculé dans ton navigateur. Une préférence de langue est stockée localement (localStorage) et n\'est jamais transmise.' : 'No data stored. Everything is calculated in your browser. A language preference is stored locally in your browser (localStorage) and is never transmitted.';
+  qi('homeSources').innerHTML = f
+    ? 'Statistiques basées sur les données de l\'<a href="https://www.insee.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">INSEE</a>, <a href="https://dares.travail-emploi.gouv.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">DARES</a>, <a href="https://www.santepubliquefrance.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">Santé publique France</a>, <a href="https://www.oecd.org/fr/" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">OCDE</a>, <a href="https://www.mediametrie.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">Médiamétrie</a>, <a href="https://www.arcep.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">Arcep</a> et <a href="https://www.ifop.com" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">IFOP</a>.'
+    : 'Statistics based on data from <a href="https://www.insee.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">INSEE</a>, <a href="https://dares.travail-emploi.gouv.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">DARES</a>, <a href="https://www.santepubliquefrance.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">French Public Health</a>, <a href="https://www.oecd.org/en/" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">OECD</a>, <a href="https://www.mediametrie.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">Médiamétrie</a>, <a href="https://www.arcep.fr" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">Arcep</a> and <a href="https://www.ifop.com" target="_blank" rel="noopener" style="color:#999;text-decoration:underline">IFOP</a>.';
 
   // Results static elements
   qs('.weeks-title').textContent = f ? 'Ta vie en semaines' : 'Your life in weeks';
@@ -982,9 +992,9 @@ function applyLang() {
     ? 'Ce ne sont que des moyennes. Ta vie, c\'est toi qui la dessines.'
     : 'These are just averages. Your life is yours to design.';
   qs('.btn-restart').textContent = f ? 'Recommencer' : 'Start over';
-  qs('.footer-sources').textContent = f
-    ? 'Sources : INSEE, DARES, Santé publique France, OCDE, Médiamétrie, Arcep, IFOP'
-    : 'Sources: INSEE, DARES, French Public Health, OECD, Médiamétrie, Arcep, IFOP';
+  qs('.footer-sources').innerHTML = f
+    ? 'Sources : <a href="https://www.insee.fr" target="_blank" rel="noopener">INSEE</a>, <a href="https://dares.travail-emploi.gouv.fr" target="_blank" rel="noopener">DARES</a>, <a href="https://www.santepubliquefrance.fr" target="_blank" rel="noopener">Santé publique France</a>, <a href="https://www.oecd.org/fr/" target="_blank" rel="noopener">OCDE</a>, <a href="https://www.mediametrie.fr" target="_blank" rel="noopener">Médiamétrie</a>, <a href="https://www.arcep.fr" target="_blank" rel="noopener">Arcep</a>, <a href="https://www.ifop.com" target="_blank" rel="noopener">IFOP</a>'
+    : 'Sources: <a href="https://www.insee.fr" target="_blank" rel="noopener">INSEE</a>, <a href="https://dares.travail-emploi.gouv.fr" target="_blank" rel="noopener">DARES</a>, <a href="https://www.santepubliquefrance.fr" target="_blank" rel="noopener">French Public Health</a>, <a href="https://www.oecd.org/en/" target="_blank" rel="noopener">OECD</a>, <a href="https://www.mediametrie.fr" target="_blank" rel="noopener">Médiamétrie</a>, <a href="https://www.arcep.fr" target="_blank" rel="noopener">Arcep</a>, <a href="https://www.ifop.com" target="_blank" rel="noopener">IFOP</a>';
   qs('.footer-made').textContent = f ? 'Fait avec soin en France. Aucune donnée collectée.' : 'Made with care in France. No data collected.';
   qs('.footer-disclaimer').textContent = f
     ? 'Les résultats sont des estimations basées sur des moyennes statistiques nationales. Ils ne constituent ni un avis médical, ni un diagnostic, ni une prédiction individuelle. L\'espérance de vie utilisée est une donnée statistique de l\'INSEE et ne présage en rien de la durée de vie réelle d\'une personne.'
