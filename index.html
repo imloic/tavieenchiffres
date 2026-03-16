@@ -45,7 +45,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://stats.imloic.cloud; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://stats.imloic.cloud; connect-src 'self' https://stats.imloic.cloud; object-src 'none'; base-uri 'self'; form-action 'self'">
 <!-- Fonts served locally — no external requests (GDPR compliant) -->
 <style>
 @font-face { font-family: 'Inter'; font-style: normal; font-weight: 300; font-display: swap; src: url(fonts/inter-300.woff2) format('woff2'); }
@@ -616,6 +616,21 @@ footer a { color: #555; }
 }
 .stoic-quote .quote-author { display: block; font-style: normal; font-size: 14px; margin-top: 8px; color: #555; }
 </style>
+<!-- Matomo Analytics (cookieless — RGPD compliant, no consent needed) -->
+<script>
+  var _paq = window._paq = window._paq || [];
+  _paq.push(['disableCookies']);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="https://stats.imloic.cloud/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '10']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Matomo Code -->
 </head>
 <body>
 
