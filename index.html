@@ -684,7 +684,9 @@ footer a { color: #555; }
       <div class="sex-toggle">
         <button type="button" data-sex="M" onclick="selectSex('M', this)">Homme</button>
         <button type="button" data-sex="F" onclick="selectSex('F', this)">Femme</button>
+        <button type="button" data-sex="O" onclick="selectSex('O', this)">Autre</button>
       </div>
+      <p id="sexDisclaimer" style="display:none;color:#888;font-size:11px;margin-top:8px">Calculs basés sur la moyenne homme/femme. L'INSEE ne fournit pas de données non-binaires.</p>
     </div>
 
     <div class="quick-questions">
@@ -700,7 +702,7 @@ footer a { color: #555; }
       </div>
 
       <div class="question">
-        <div class="q-label" id="qlCommute">Ton trajet domicile-travail ?</div>
+        <div class="q-label" id="qlCommute">Ton trajet domicile-travail ? (aller)</div>
         <div class="q-options" data-q="commute">
           <button onclick="selectOption('commute', 0, this)">Pas de trajet</button>
           <button onclick="selectOption('commute', 20, this)">&lt; 30 min</button>
@@ -797,7 +799,7 @@ const userInput = { birthDate: null, sex: null, coffee: 3, commute: 45, office: 
 // DATA (INSEE, DARES, Santé publique France, OCDE, Médiamétrie)
 // ============================================================
 const DATA = {
-  lifeExpectancy: { M: 80.4, F: 85.9 },
+  lifeExpectancy: { M: 80.4, F: 85.9, O: 83.15 },
   sleepPerNight: 6.92,
   eatingPerDay: 2.22,
   workHoursPerYear: 1661,
@@ -806,7 +808,7 @@ const DATA = {
   meetingHoursPerWeek: 10.2,
   workWeeksPerYear: 46,
   vacationDaysPerYear: 33,
-  houseworkHoursPerDay: { M: 2, F: 3.43 },
+  houseworkHoursPerDay: { M: 2, F: 3.43, O: 2.72 },
   schoolYears: 19,
   heartbeatsPerDay: 100000,
   bloodLitersPerDay: 7200,
@@ -901,7 +903,7 @@ function getZodiac(month, day) {
   return signs[0];
 }
 
-function getChineseZodiac(year) {
+function getChineseZodiac(year, month, day) {
   const animals = [
     { fr: 'Rat', en: 'Rat', emoji: '🐀' },
     { fr: 'Buffle', en: 'Ox', emoji: '🐂' },
@@ -916,7 +918,14 @@ function getChineseZodiac(year) {
     { fr: 'Chien', en: 'Dog', emoji: '🐕' },
     { fr: 'Cochon', en: 'Pig', emoji: '🐷' },
   ];
-  return animals[(year - 4) % 12];
+  // Lunar New Year dates (month*100+day) for 1930–2026
+  const LNY = [130,217,206,126,214,204,124,211,131,219,208,127,215,205,125,213,202,122,210,129,217,206,127,214,203,124,212,131,218,208,128,215,205,125,213,202,121,209,130,217,206,127,215,203,123,211,131,218,207,128,216,205,125,213,202,220,209,129,217,206,127,215,204,123,210,131,219,207,128,216,205,124,212,201,122,209,129,218,207,126,214,203,123,210,131,219,208,128,216,205,125,212,201,122,210,129,217];
+  let zy = year;
+  const idx = year - 1930;
+  if (idx >= 0 && idx < LNY.length) {
+    if (month * 100 + day < LNY[idx]) zy = year - 1;
+  }
+  return animals[(zy - 4) % 12];
 }
 
 function getGeneration(year) {
@@ -968,11 +977,15 @@ function applyLang() {
   const sexBtns = qsa('.sex-toggle button');
   sexBtns[0].textContent = f ? 'Homme' : 'Male';
   sexBtns[1].textContent = f ? 'Femme' : 'Female';
+  sexBtns[2].textContent = f ? 'Autre' : 'Other';
+  qi('sexDisclaimer').textContent = f
+    ? 'Calculs basés sur la moyenne homme/femme. L\'INSEE ne fournit pas de données non-binaires.'
+    : 'Calculations based on male/female average. INSEE does not provide non-binary data.';
 
   // Quick questions
   qi('qqTitle').textContent = f ? 'Quelques questions (30 sec)' : 'A few questions (30 sec)';
   qi('qlCoffee').textContent = f ? 'Tu bois du café ?' : 'Do you drink coffee?';
-  qi('qlCommute').textContent = f ? 'Ton trajet domicile-travail ?' : 'Your commute?';
+  qi('qlCommute').textContent = f ? 'Ton trajet domicile-travail ? (aller)' : 'Your commute? (one way)';
   qi('qlOffice').textContent = f ? 'Tu travailles en bureau ?' : 'Do you work in an office?';
   qi('qlCook').textContent = f ? 'Tu cuisines ?' : 'Do you cook?';
 
@@ -1035,6 +1048,7 @@ function selectSex(sex, btn) {
   userInput.sex = sex;
   qsa('.sex-toggle button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  qi('sexDisclaimer').style.display = sex === 'O' ? 'block' : 'none';
   checkReady();
 }
 
@@ -1097,9 +1111,16 @@ function compute() {
   const commuteYears = (commuteMinPerDay / 60 / 24) * workingYears * (230 / 365.25);
   const commuteYearsLife = (commuteMinPerDay / 60 / 24) * DATA.careerYears * (230 / 365.25);
 
-  // Screens
-  const screenYears = (DATA.screenHoursPerDay / 24) * Math.max(0, ageYears - 10);
-  const screenYearsLife = (DATA.screenHoursPerDay / 24) * (lifeExp - 10);
+  // Screens (two-phase: TV era ~2.5h/day pre-2010, all screens 4h/day post-2010)
+  const screenStartYear = Math.max(birth.getFullYear() + 10, 1960);
+  const currentYear = now.getFullYear();
+  const preSmartphoneYears = Math.max(0, Math.min(2010, currentYear) - screenStartYear);
+  const postSmartphoneYears = Math.max(0, currentYear - Math.max(2010, screenStartYear));
+  const screenYears = (2.5 / 24) * preSmartphoneYears + (DATA.screenHoursPerDay / 24) * postSmartphoneYears;
+  const endYear = birth.getFullYear() + lifeExp;
+  const lifePreSmartphone = Math.max(0, Math.min(2010, endYear) - screenStartYear);
+  const lifePostSmartphone = Math.max(0, endYear - Math.max(2010, screenStartYear));
+  const screenYearsLife = (2.5 / 24) * lifePreSmartphone + (DATA.screenHoursPerDay / 24) * lifePostSmartphone;
 
   // Meetings
   const meetingDaysPerYear = userInput.office ? (DATA.meetingHoursPerWeek * DATA.workWeeksPerYear) / 8 : 0;
@@ -1128,7 +1149,7 @@ function compute() {
 
   // Zodiac / Generation
   const zodiac = getZodiac(birth.getMonth() + 1, birth.getDate());
-  const chineseZodiac = getChineseZodiac(birth.getFullYear());
+  const chineseZodiac = getChineseZodiac(birth.getFullYear(), birth.getMonth() + 1, birth.getDate());
   const generation = getGeneration(birth.getFullYear());
 
   // Badges
@@ -1334,8 +1355,8 @@ function _discover(rerender) {
       `<strong>${fd(stats.screenYearsLife)} years</strong> of your life on a screen`
     ),
     detail: t(
-      `${DATA.screenHoursPerDay}h/jour en moyenne. Déjà ${fd(stats.screenYears)} ans passés depuis tes 10 ans.`,
-      `${DATA.screenHoursPerDay}h/day on average. Already ${fd(stats.screenYears)} years since age 10.`
+      `~2,5h/jour avant 2010 (TV), ${DATA.screenHoursPerDay}h/jour depuis (tous écrans). Déjà ${fd(stats.screenYears)} ans cumulés.`,
+      `~2.5h/day before 2010 (TV), ${DATA.screenHoursPerDay}h/day since (all screens). Already ${fd(stats.screenYears)} years total.`
     ),
     source: 'Arcep / CREDOC 2025',
   });
@@ -1370,10 +1391,14 @@ function _discover(rerender) {
     detail: t(
       userInput.sex === 'F'
         ? 'Les femmes font 3h26/jour de tâches domestiques. Les hommes : 2h. Écart : 1h26.'
-        : 'Les hommes font 2h/jour de tâches domestiques. Les femmes : 3h26. Écart : 1h26.',
+        : userInput.sex === 'M'
+        ? 'Les hommes font 2h/jour de tâches domestiques. Les femmes : 3h26. Écart : 1h26.'
+        : 'Moyenne hommes/femmes. Les femmes font 3h26/jour, les hommes 2h. Pas de données non-binaires (INSEE).',
       userInput.sex === 'F'
         ? 'Women do 3h26/day of housework. Men: 2h. Gap: 1h26.'
-        : 'Men do 2h/day of housework. Women: 3h26. Gap: 1h26.'
+        : userInput.sex === 'M'
+        ? 'Men do 2h/day of housework. Women: 3h26. Gap: 1h26.'
+        : 'Male/female average. Women: 3h26/day, men: 2h. No non-binary data available (INSEE).'
     ),
     source: 'INSEE',
   });
@@ -1620,13 +1645,13 @@ function generateWeeksGrid(stats) {
   grid.innerHTML = '';
   const totalWeeks = Math.round(stats.lifeExp * 52);
   const livedWeeks = Math.round(stats.ageYears * 52);
+  const frag = document.createDocumentFragment();
   for (let i = 0; i < totalWeeks; i++) {
     const cell = document.createElement('div');
-    cell.className = 'week-cell';
-    if (i < livedWeeks) cell.classList.add('lived');
-    if (i === livedWeeks) cell.classList.add('current');
-    grid.appendChild(cell);
+    cell.className = 'week-cell' + (i < livedWeeks ? ' lived' : '') + (i === livedWeeks ? ' current' : '');
+    frag.appendChild(cell);
   }
+  grid.appendChild(frag);
 }
 
 // ============================================================
@@ -1641,7 +1666,13 @@ function generatePieChart(stats) {
   const commuteH = (userInput.commute * 2 / 60) * 230 * DATA.careerYears;
   const houseworkH = DATA.houseworkHoursPerDay[userInput.sex] * 365.25 * (lifeExp - 18);
   const cookH = (userInput.cook / 60) * 365.25 * (lifeExp - 18);
-  const screenLeisureH = 2.5 * 365.25 * (lifeExp - 6);
+  // Screen leisure (two-phase: TV era ~2h/day leisure, smartphone era ~2.5h/day leisure)
+  const birthY = stats.birthDate.getFullYear();
+  const slStart = Math.max(birthY + 6, 1960);
+  const slEnd = birthY + lifeExp;
+  const slPre = Math.max(0, Math.min(2010, slEnd) - slStart);
+  const slPost = Math.max(0, slEnd - Math.max(2010, slStart));
+  const screenLeisureH = (2 * 365.25 * slPre) + (2.5 * 365.25 * slPost);
 
   const toYears = h => h / (365.25 * 24);
   const slices = [
@@ -1944,7 +1975,7 @@ async function generateShareCard(format) {
   ctx.textAlign = 'center';
   ctx.font = f('700', isStory ? 32 : 26);
   ctx.fillStyle = '#ff6b35';
-  ctx.fillText('tavieenchiffres.guillout.com', W / 2, footY);
+  ctx.fillText('tavieenchiffres.com', W / 2, footY);
 
   ctx.font = f('300', isStory ? 24 : 20);
   ctx.fillStyle = '#64748b';
@@ -1961,7 +1992,7 @@ async function generateShareCard(format) {
         await navigator.share({
           files: [file],
           title: t('Ta Vie en Chiffres', 'Your Life in Numbers'),
-          text: t('Découvre tes chiffres de vie', 'Discover your life numbers') + ' — tavieenchiffres.guillout.com',
+          text: t('Découvre tes chiffres de vie', 'Discover your life numbers') + ' — tavieenchiffres.com',
         });
         return;
       } catch (e) {
@@ -2078,6 +2109,7 @@ function setupObservers() {
 // UTILS
 // ============================================================
 function restart() {
+  if (liveCounterRAF) { cancelAnimationFrame(liveCounterRAF); liveCounterRAF = null; }
   qi('results').style.display = 'none';
   qi('inputScreen').style.display = 'flex';
   qi('inputScreen').classList.remove('fade-out');
